@@ -46,7 +46,7 @@ def get_excel(path, sheet_index, dicts=False):
     return sheet
 
 
-def get_csv(path, delimiter="\t", dicts=True):
+def get_csv(path, delimiter="\t", dicts=True, extract=False):
     sheet = []
     path = Path('raw').joinpath(path).as_posix()
     if dicts:
@@ -98,6 +98,35 @@ class NormDataSet:
 
     def download(self):
         return
+
+    def extract_data(
+            self, 
+            dicts,
+            namespace,
+            header,
+            gloss='ENGLISH',
+            language='en'
+            ):
+        mapped = defaultdict(list)
+        for i, row in enumerate(dicts):
+            new_row = {b: c(row[a]) for a, b, c in namespace}
+            if not 'LINE_IN_SOURCE' in new_row:
+                new_row['LINE_IN_SOURCE'] = str(i+1)
+            if new_row[gloss] in self.mappings[language]:
+                match, priority, pos = self.mappings[language][new_row[gloss]][0]
+                new_row['CONCEPTICON_ID'] = str(match)
+                new_row['CONCEPTICON_GLOSS'] = \
+                        self.concepticon.conceptsets[match].gloss
+                new_row['_PRIORITY'] = priority
+                mapped[match] += [new_row]
+        table = []
+        for key, rows in sorted(mapped.items(), key=lambda x: x[0]):
+            row = sorted(
+                    rows, 
+                    key=lambda x: (x['_PRIORITY']))[0]
+            table += [[row[h] for h in header]]
+        self.mapped = mapped
+        self.writefile(header, table)
 
     def run(self, args):
         if 'download' in args:
