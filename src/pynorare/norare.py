@@ -43,6 +43,7 @@ class NoRaRe():
 
         for row in self.get_dataset(dataset)[0]:
             out += [[row[h] for h in columns]]
+
         return out
 
 

@@ -69,11 +69,12 @@ class NormDataSet:
                 self.raw_dir.joinpath(target).as_posix())
         log.download(url)
 
-    def get_csv(self, path, delimiter="\t", dicts=True):
+    def get_csv(self, path, delimiter="\t", dicts=True, coding="utf-8"):
         sheet = get_csv(
                 self.raw_dir.joinpath(path).as_posix(),
                 delimiter,
-                dicts)
+                dicts,
+                coding)
         log.info('loaded data {0}'.format(path))
         return sheet
 

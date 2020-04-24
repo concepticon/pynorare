@@ -30,5 +30,5 @@ def run(args):
     else:
         columns = args.columns
     table = norare.get_columns(args.dataset[0], *columns)
-    print(tabulate(table[:args.items], headers=['ID', 'RATING'], tablefmt='pipe'))
+    print(tabulate(table[:args.items], headers=columns, tablefmt='pipe'))
         

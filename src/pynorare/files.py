@@ -45,14 +45,14 @@ def get_excel(path, sheet_index, dicts=False):
     return sheet
 
 
-def get_csv(path, delimiter="\t", dicts=True):
+def get_csv(path, delimiter="\t", dicts=True, coding='utf-8'):
     sheet = []
     if dicts:
-        with UnicodeDictReader(path, delimiter=delimiter) as reader:
+        with UnicodeDictReader(path, delimiter=delimiter, encoding=coding) as reader:
             for line in reader:
                 sheet += [line]
     else:
-        with UnicodeReader(path, delimiter=delimiter) as reader:
+        with UnicodeReader(path, delimiter=delimiter, encoding=coding) as reader:
             for line in reader:
                 sheet += [line]
     log.loaded(path)
