@@ -38,12 +38,15 @@ class NoRaRe():
                     )
             return self.datasets[dataset]
 
-    def get_columns(self, dataset, *columns):
+    def get_columns(self, dataset, *columns, dicts=True):
         out = []
 
         for row in self.get_dataset(dataset)[0]:
             out += [[row[h] for h in columns]]
-
+        if dicts:
+            return [{col: content for col, content in zip(
+                columns,
+                row)} for row in out]
         return out
 
 
