@@ -14,7 +14,6 @@ from pynorare import log
 import attr
 
 def get_mappings():
-
     # get mappings etc.
     repos = Config.from_file().get_clone('concepticon')
     concepticon = Concepticon(repos)
