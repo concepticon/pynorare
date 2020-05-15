@@ -27,7 +27,7 @@ def run(args):
         table = []
         for i, ds in tqdm(enumerate(norare.datasets.values())):
             table += [[i+1, ds.author.split(' and ')[0], ds.year,
-                ds.source_language, ', '.join(ds.tags),
+                ', '.join(ds.source_language), ', '.join(ds.tags),
                 len(ds.columns)-3, len(ds.concepts)]]
             concepts.update(ds.concepts)
         table += [[
@@ -42,21 +42,45 @@ def run(args):
             tablefmt='pipe'))
 
     if args.columns:
-        columns = defaultdict(int)
+        columns = defaultdict(list)
         for i, ds in tqdm(enumerate(norare.datasets.values())):
             for column in ds.columns:
                 if column not in [
                     'concepticon_id',
                     'concepticon_gloss',
-                    'line_in_source'
+                    'line_in_source',
+                    'english',
+                    'german',
+                    'polish',
+                    'spanish',
+                    'chinese',
+                    'french',
+                    'dutch',
                     ]:
-                    columns[column] += 1
+                    columns[(ds.id, column)] += [(
+                        ds.columns[column].language, 
+                        ds.columns[column].norare,
+                        ds.columns[column].structure,
+                        ds.columns[column].type,
+
+                        )]
 
         table = []
         for i, (k, v) in enumerate(sorted(columns.items(),
-            key=lambda x: x[1], reverse=True)):
-            table += [(i+1, k, v)]
-        print(tabulate(table))
+            key=lambda x: (x[0][1], x[0][0]))):
+            table += [(
+                i+1, 
+                k[0],
+                k[1],
+                ', '.join(list(set([x[0] for x in v])))[:30],
+                ', '.join(list(set([x[1] for x in v])))[:15],
+                ', '.join(list(set([x[2] for x in v])))[:15],
+                ', '.join(list(set([x[3] for x in v])))[:15],
+
+                )
+                ]
+        print(tabulate(table, headers=['No', 
+            'Dataset', 'Field', 'Ln', 'Norare', 'Structure', 'Type']))
 
 
     
