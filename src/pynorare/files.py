@@ -8,6 +8,7 @@ from urllib.request import urlretrieve
 from tempfile import TemporaryDirectory
 from pathlib import Path
 from zipfile import ZipFile
+from tarfile import TarFile
 from csvw.metadata import TableGroup
 from pynorare import log
 
@@ -69,4 +70,9 @@ def download_zip(url, target, filename, path):
             zf.extract(filename, path=path)
 
 
+def download_tar(url, target, filename, path):
+    download_file(url, target)
+    with open(target, 'rb') as f:
+        with TarFile(f) as tf:
+            tf.extract(filename, path=path)
 

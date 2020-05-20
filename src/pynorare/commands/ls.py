@@ -26,8 +26,8 @@ def run(args):
     if args.datasets:
         table = []
         for i, ds in tqdm(enumerate(norare.datasets.values())):
-            table += [[i+1, ds.author.split(' and ')[0], ds.year,
-                ', '.join(ds.source_language), ', '.join(ds.tags),
+            table += [[i+1, ds.author.replace(' AND ', ' and ').split(' and ')[0], ds.year,
+                ', '.join(ds.source_language[:3]), ', '.join(ds.tags),
                 len(ds.columns)-3, len(ds.concepts)]]
             concepts.update(ds.concepts)
         table += [[

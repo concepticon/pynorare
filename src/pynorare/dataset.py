@@ -104,8 +104,9 @@ class NormDataSet:
             gloss='ENGLISH',
             language='en',
             write_file=True,
+            pos=False,
+            pos_mapper=False,
             ):
-
         # if namespace is missing, retrieve it from the metadata file
         if not namespace:
             namespace, header = [], []
@@ -117,6 +118,7 @@ class NormDataSet:
                         str(col.name), 
                         self.types.get(col.datatype.base, str)
                             )]
+        pos_mapper = pos_mapper or {}
 
         mapped = defaultdict(list)
         for i, row in enumerate(dicts):
@@ -124,14 +126,29 @@ class NormDataSet:
             if not 'LINE_IN_SOURCE' in new_row:
                 new_row['LINE_IN_SOURCE'] = str(i+1)
             if new_row[gloss] in self.mappings[language]:
-                match, priority, pos = self.mappings[language][new_row[gloss]][0]
-                new_row['CONCEPTICON_ID'] = str(match)
-                new_row['CONCEPTICON_GLOSS'] = \
-                        self.concepticon.conceptsets[match].gloss
-                new_row['_PRIORITY'] = priority
-                mapped[match] += [new_row]
+                if pos:
+                    match, priority, pos = False, False, False
+                    for (
+                            match_, priority_, pos_ 
+                            ) in self.mappings[language][new_row[gloss]]:
+                        if pos_ == pos_mapper.get(
+                                new_row['POS'], new_row['POS']):
+                            match, priority, pos = match_, priority_, pos_
+                    if match:
+                        new_row['CONCEPTICON_ID'] = str(match)
+                        new_row['CONCEPTICON_GLOSS'] = \
+                                self.concepticon.conceptsets[match].gloss
+                        new_row['_PRIORITY'] = priority
+                        mapped[match] += [new_row]
+                else:
+                    match, priority, pos = self.mappings[language][new_row[gloss]][0]
+                    new_row['CONCEPTICON_ID'] = str(match)
+                    new_row['CONCEPTICON_GLOSS'] = \
+                            self.concepticon.conceptsets[match].gloss
+                    new_row['_PRIORITY'] = priority
+                    mapped[match] += [new_row]
         table = []
-        for key, rows in sorted(mapped.items(), key=lambda x: x[0]):
+        for key, rows in sorted(mapped.items(), key=lambda x: (x[0], len(x[1]), x[1][0]['LINE_IN_SOURCE'])):
             row = sorted(
                     rows, 
                     key=lambda x: (x['_PRIORITY']))[0]
