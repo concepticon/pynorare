@@ -106,6 +106,7 @@ class NormDataSet:
             write_file=True,
             pos=False,
             pos_mapper=False,
+            pos_name='POS'
             ):
         # if namespace is missing, retrieve it from the metadata file
         if not namespace:
@@ -132,7 +133,7 @@ class NormDataSet:
                             match_, priority_, pos_ 
                             ) in self.mappings[language][new_row[gloss]]:
                         if pos_ == pos_mapper.get(
-                                new_row['POS'], new_row['POS']):
+                                new_row[pos_name], new_row[pos_name]):
                             match, priority, pos = match_, priority_, pos_
                     if match:
                         new_row['CONCEPTICON_ID'] = str(match)
@@ -141,7 +142,7 @@ class NormDataSet:
                         new_row['_PRIORITY'] = priority
                         mapped[match] += [new_row]
                 else:
-                    match, priority, pos = self.mappings[language][new_row[gloss]][0]
+                    match, priority, pos_ = self.mappings[language][new_row[gloss]][0]
                     new_row['CONCEPTICON_ID'] = str(match)
                     new_row['CONCEPTICON_GLOSS'] = \
                             self.concepticon.conceptsets[match].gloss
