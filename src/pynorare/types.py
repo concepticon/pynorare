@@ -13,7 +13,7 @@ def types():
     return {
             'string': str,
             'integer': integer,
-            'float': lambda x: str(round(float(x), 2)) if (x and x not in ['NAN','NA','NaN']) else x
+            'float': lambda x: str(round(float(x), 2)) if (x and x not in ['NAN','NA','NaN']) else str(x)
             }
 
 
