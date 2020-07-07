@@ -24,6 +24,7 @@ class Column(object):
     note = attr.ib()
     language = attr.ib()
     source = attr.ib()
+    other = attr.ib()
 
 
 @attr.s
@@ -59,16 +60,6 @@ class ConceptSetMeta(object):
                 tbg.tabledict[self.id+'.tsv'].tableSchema.columns})
 
         for c in tbg.tabledict[self.id+'.tsv'].tableSchema.columns:
-            params = {
-                    'dataset': self.id,
-                    'name': c.name.lower(),
-                    'nameinsource': str(c.titles) if c.titles else '',
-                    'structure': '',
-                    'norare': '',
-                    'type': '',
-                    'rating': '',
-                    'note': '',
-                    }
             columns[c.name.lower()] = Column(
                     dataset=self.id,
                     name=c.name.lower(),
@@ -93,8 +84,10 @@ class ConceptSetMeta(object):
                     language = self.norare.annotations[self.id].get(
                         c.name.lower(),
                         {'language': ''})['language'],
-                    nameinsource=str(c.titles) if c.titles else ''
-                    )
+                    nameinsource=str(c.titles) if c.titles else '',
+                    other=self.norare.annotations[self.id].get(
+                        c.name.lower(),
+                        {'other': ''})['other']                    )
 
         return columns
 
@@ -117,7 +110,7 @@ class NoRaRe():
                 self.annotations[row['DATASET']][row['NAME'].lower()] = {
                         k.lower(): row[k] for k in ['DATASET', 'NAME',
                         'LANGUAGE', 'STRUCTURE',
-                            'TYPE', 'NORARE', 'RATING', 'SOURCE', 'NOTE']}
+                            'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
                 datasets.add(row['DATASET'])
 
         with UnicodeDictReader(self.repos.joinpath('concept_set_meta.tsv'),
