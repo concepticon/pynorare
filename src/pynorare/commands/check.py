@@ -15,9 +15,7 @@ def run(args, test=False):
         visited = set()
         args.log.info('checking {0}'.format(ds.id))
         for colid, column in ds.columns.items():
-            if colid not in [
-                    'concepticon_gloss', 'concepticon_id', 'number',
-                    'line_in_source']:
+            if colid in norare.annotations[ds.id]:
                 uniq = '-'.join([column.language, column.norare,
                     column.type, column.structure, column.other])
                 if uniq in visited:

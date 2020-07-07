@@ -13,7 +13,7 @@ def run(args):
     norare = NoRaRe(args.norarepo)
     concepts = set()
     meta, data = {}, defaultdict(dict)
-    for i, ds in tqdm(enumerate(norare.datasets.values())):
+    for i, ds in enumerate(norare.datasets.values()):
         args.log.info('analyze '+ds.id)
         meta[ds.id] = {
                 'author': ds.author,
@@ -27,7 +27,7 @@ def run(args):
             concept = {}
             visited = set()
             for colid, column in ds.columns.items():
-                if column.type:
+                if colid in norare.annotations[ds.id]:
                     concept[colid] = {
                             'value': concept_[colid],
                             'language': column.language,
