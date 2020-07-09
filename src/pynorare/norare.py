@@ -1,10 +1,9 @@
 from pathlib import Path
-from csvw.metadata import TableGroup
-from csvw.dsv import UnicodeDictReader
-from tqdm import tqdm
-from pynorare import log
-import attr
 from collections import OrderedDict, defaultdict
+
+from csvw.metadata import TableGroup
+from csvw.dsv import reader
+import attr
 from cldfcatalog import Config
 from pyconcepticon import Concepticon
 from clldutils.source import Source
@@ -105,25 +104,22 @@ class NoRaRe():
         concepticon = Concepticon(Config.from_file().get_clone('concepticon'))
         datasets = set()
         self.annotations = defaultdict(lambda : OrderedDict())
-        with UnicodeDictReader(self.repos.joinpath('norare.tsv'), delimiter='\t') as reader:
-            for row in reader:
-                self.annotations[row['DATASET']][row['NAME'].lower()] = {
-                        k.lower(): row[k] for k in ['DATASET', 'NAME',
-                        'LANGUAGE', 'STRUCTURE',
-                            'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
-                datasets.add(row['DATASET'])
+        for row in reader(self.repos / 'norare.tsv', delimiter='\t', dicts=True):
+            self.annotations[row['DATASET']][row['NAME'].lower()] = {
+                    k.lower(): row[k] for k in ['DATASET', 'NAME',
+                    'LANGUAGE', 'STRUCTURE',
+                        'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
+            datasets.add(row['DATASET'])
 
-        with UnicodeDictReader(self.repos.joinpath('concept_set_meta.tsv'),
-                delimiter='\t') as reader:
-            for row in reader:
-                row['norare'] = self
-                row['path'] = self.repos.joinpath('concept_set_meta',
-                        row['ID'], row['ID']+'.tsv-metadata.json').as_posix()
-                self.datasets[row['ID']] = ConceptSetMeta(
-                        **{k.lower(): v for k, v in row.items()})
-                self.datasets[row['ID']].source_language = [
-                    l.lower().strip(
-                        ) for l in self.datasets[row['ID']].source_language.split(',')]
+        for row in reader(self.repos / 'concept_set_meta.tsv', delimiter='\t', dicts=True):
+            row['norare'] = self
+            row['path'] = self.repos.joinpath('concept_set_meta',
+                    row['ID'], row['ID']+'.tsv-metadata.json').as_posix()
+            self.datasets[row['ID']] = ConceptSetMeta(
+                    **{k.lower(): v for k, v in row.items()})
+            self.datasets[row['ID']].source_language = [
+                l.lower().strip(
+                    ) for l in self.datasets[row['ID']].source_language.split(',')]
 
         # remaining datasets come from concepticon, we identify them from
         # datasets
@@ -146,7 +142,6 @@ class NoRaRe():
                         'concepticondata', 'conceptlists', ds.id+'.tsv-metadata.json').as_posix()
                     )
 
-
         # get bibliography
         self.refs = OrderedDict()
         with self.repos.joinpath('references',
@@ -154,10 +149,3 @@ class NoRaRe():
             for key, entry in pybtex.database.parse_string(
                     fp.read(), bib_format='bibtex').entries.items():
                 self.refs[key] = Source.from_entry(key, entry)
-
-
-
-    def __iter__(self):
-        return iter(self.norms)
-
-

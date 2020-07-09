@@ -11,7 +11,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords='',
     license='Apache 2.0',
-    url='https://github.com/lingpy/norm-data',
+    url='https://github.com/concepticon/pynorare',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
@@ -23,7 +23,7 @@ setup(
     },
     platforms='any',
     python_requires='>=3.5',
-        install_requires=[
+    install_requires=[
         'pyconcepticon>=2.5',
         'attrs>=18.2',
         'clldutils>=3.1.2',
@@ -52,6 +52,8 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy'
     ],

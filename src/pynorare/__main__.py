@@ -1,5 +1,5 @@
 """
-Main command line interface to the pyclts package.
+Main command line interface to the pynorare package.
 """
 import sys
 from pathlib import Path
@@ -48,7 +48,6 @@ def main(args=None, catch_all=False, parsed_args=None):
             # If a specific version of the data is to be used, we make
             # use of a Catalog as context manager:
             stack.enter_context(Catalog(args.repos, tag=args.repos_version))
-        #args.norare =)
         args.repos = Concepticon(args.repos)
         args.log.info('norare at {0}'.format(args.repos.repos))
         try:
