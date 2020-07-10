@@ -7,7 +7,6 @@ from csvw.dsv import reader
 from pyconcepticon import Concepticon
 
 import xlrd
-from pynorare import log
 
 
 def get_mappings(concepticon=None):
@@ -22,7 +21,7 @@ def get_mappings(concepticon=None):
             mappings[language][gloss].add((line['ID'], int(line['PRIORITY']), oc))
     for language, path in paths.items():
         for k, v in mappings[language].items():
-            # We sort concepticon mathces for a given gloss by descending priority and ascending
+            # We sort concepticon matches for a given gloss by descending priority and ascending
             # Concepticon ID.
             mappings[language][k] = sorted(
                 v, key=lambda x: (x[1], -int(x[0])), reverse=True)
@@ -33,10 +32,7 @@ def get_excel(path, sheet_index, dicts=False):
     xlfile = xlrd.open_workbook(str(path))
     sheet = xlfile.sheet_by_index(sheet_index)
     sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
-    if dicts:
-        sheet = [dict(zip(sheet[0], row)) for row in sheet[1:]]
-    log.loaded(path)
-    return sheet
+    return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
 
 
 def download_archive(url, target, filename, path, cls=zipfile.ZipFile):

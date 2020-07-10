@@ -2,7 +2,7 @@
 Show a dataset with its columns etc.
 """
 from tabulate import tabulate
-from pynorare.norare import NoRaRe
+from pynorare import NoRaRe
 
 def register(parser):
     parser.add_argument(

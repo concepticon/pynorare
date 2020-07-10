@@ -1,0 +1,36 @@
+{
+  "@context": ["http://www.w3.org/ns/csvw", {"@language": "en"}],
+  "dialect": {"delimiter": "\t", "encoding": "utf-8", "header": true},
+    "tables": [
+    {
+      "tableSchema": {
+        "columns": [
+          {"name": "CONCEPTICON_ID", "datatype": "integer"},
+          {"name": "CONCEPTICON_GLOSS", "datatype": "string"},
+          {"name": "LINE_IN_SOURCE", "datatype": "integer"},
+          {
+            "name": "FRENCH",
+            "datatype": "string",
+            "titles": "gloss"
+          },
+          {
+            "name": "A_FLOAT",
+            "datatype": "number",
+            "titles": "number"
+          }
+          ],
+        "foreignKeys": [
+          {
+            "columnReference": "CONCEPTICON_ID",
+            "reference": {
+              "resource": "../concepticon.tsv",
+              "columnReference": "ID"
+            }
+          }
+        ],
+        "aboutUrl": "http://concepticon.clld.org/parameters/{CONCEPTICON_ID}"
+      },
+      "url": "ds2.tsv"
+    }
+  ]
+}

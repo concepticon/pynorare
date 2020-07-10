@@ -9,3 +9,9 @@ class Dataset(NormDataSet):
     def map(self):
         self.extract_data(
             self.get_csv('data.csv', dicts=True, delimiter=','), gloss='FRENCH', language='fr')
+        self.extract_data(
+            self.get_csv('data.csv', dicts=True, delimiter=','),
+            pos=True,
+            pos_mapper={'noun': 'THING'},
+            gloss='FRENCH',
+            language='fr')

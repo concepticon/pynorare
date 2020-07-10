@@ -3,7 +3,7 @@ Create data for the web-application.
 """
 from pathlib import Path
 from tabulate import tabulate
-from pynorare.norare import NoRaRe
+from pynorare import NoRaRe
 from tqdm import tqdm
 from collections import defaultdict
 import json

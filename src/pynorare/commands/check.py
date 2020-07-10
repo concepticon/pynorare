@@ -4,7 +4,7 @@ Check the norm data TSV file.
 from cldfcatalog import Config, Catalog
 from pyconcepticon import Concepticon
 import tabulate
-from pynorare.norare import NoRaRe
+from pynorare import NoRaRe
 
 def run(args, test=False):
     """Check the norm data list"""

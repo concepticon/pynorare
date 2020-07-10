@@ -8,7 +8,7 @@ from csvw.metadata import TableGroup
 from csvw.dsv import reader
 
 from pynorare.files import get_mappings, get_excel, download_archive
-from pynorare import log
+from pynorare.log import get_logger
 
 __all__ = ['NormDataSet', 'get_dataset_cls']
 
@@ -37,6 +37,7 @@ class NormDataSet:
         if not self.raw_dir.exists():
             self.raw_dir.mkdir()
         self.fname = self.id + '.tsv'
+        self.log = get_logger()
 
     @property
     def tablegroup(self):
@@ -53,34 +54,34 @@ class NormDataSet:
     def validate(self):
         mappings = list(self.table)
         if mappings:
-            log.info('metadata file can be loaded')
+            self.log.info('metadata file can be loaded')
 
         if 'CONCEPTICON_ID' in mappings[0] and \
                 'CONCEPTICON_GLOSS' in mappings[0] and \
                 'LINE_IN_SOURCE' in mappings[0]:
-            log.info('concepticon data present in data')
+            self.log.info('concepticon data present in data')
 
     def map(self):  # pragma: no cover
-        log.warning("Function MAP is not defined")
+        self.log.warning("Function MAP is not defined")
 
     def download(self):  # pragma: no cover
-        log.warning("Function DOWNLOAD is not defined")
+        self.log.warning("Function DOWNLOAD is not defined")
 
     def download_zip(self, url, target, filename):
         download_archive(url, self.raw_dir.joinpath(target), filename, self.raw_dir)
-        log.download(url)
+        self.log.info('Downloaded {0} successfully.'.format(url))
 
     def download_file(self, url, target):
         urlretrieve(url, str(self.raw_dir / target))
-        log.download(url)
+        self.log.info('Downloaded {0} successfully.'.format(url))
 
     def get_csv(self, path, delimiter="\t", dicts=True, coding="utf-8"):
-        log.info('load data from {0}'.format(path))
+        self.log.info('load data from {0}'.format(path))
         return list(reader(self.raw_dir / path, delimiter=delimiter, dicts=dicts, encoding=coding))
 
     def get_excel(self, path, sidx, dicts=True):
         sheet = get_excel(self.raw_dir.joinpath(path), sidx, dicts)
-        log.info('loaded data {0}'.format(path))
+        self.log.info('load data from {0}'.format(path))
         return sheet
     
     def extract_data(self,
@@ -128,6 +129,6 @@ class NormDataSet:
             self.download()
         if 'map' in args:
             self.map()
-            log.matches(len(self.mapped))
+            self.log.info('{} matches found'.format(len(self.mapped)))
         if 'validate' in args:
             self.validate()
