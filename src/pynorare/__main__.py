@@ -2,38 +2,38 @@
 Main command line interface to the pynorare package.
 """
 import sys
-from pathlib import Path
+import pathlib
 import contextlib
 
 from cldfcatalog import Config, Catalog
-from clldutils.clilib import register_subcommands, get_parser_and_subparsers, ParserError
+from clldutils.clilib import register_subcommands, get_parser_and_subparsers, ParserError, PathType
 from clldutils.loglib import Logging
-
 from pyconcepticon import Concepticon
+
+from pynorare import NoRaRe
+import pynorare.commands
 
 
 def main(args=None, catch_all=False, parsed_args=None):
-    import pynorare.commands
-
     try:
         repos = Config.from_file().get_clone('concepticon')
     except KeyError:
-        repos = Path('.')
+        repos = pathlib.Path('.')
 
     parser, subparsers = get_parser_and_subparsers('norare')
     parser.add_argument(
         '--repos',
         help="clone of concepticon/concepticon-data",
         default=repos,
-        type=Path)
+        type=PathType(type='dir'))
     parser.add_argument(
         '--repos-version',
         help="version of repository data. Requires a git clone!",
         default=None)
     parser.add_argument(
         '--norarepo',
-        default=Path('.'),
-        type=Path)
+        default=pathlib.Path('.'),
+        type=PathType(type='dir'))
 
     register_subcommands(subparsers, pynorare.commands)
 
@@ -42,6 +42,7 @@ def main(args=None, catch_all=False, parsed_args=None):
         parser.print_help()
         return 1
 
+    args.api = NoRaRe(args.norarepo)
     with contextlib.ExitStack() as stack:
         stack.enter_context(Logging(args.log, level=args.log_level))
         if args.repos_version:

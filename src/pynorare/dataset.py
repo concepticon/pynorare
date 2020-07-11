@@ -123,12 +123,3 @@ class NormDataSet:
 
         self.mapped = mapped
         self.table.write(table, base=self.dir)
-
-    def run(self, args):
-        if 'download' in args:
-            self.download()
-        if 'map' in args:
-            self.map()
-            self.log.info('{} matches found'.format(len(self.mapped)))
-        if 'validate' in args:
-            self.validate()

@@ -21,7 +21,9 @@ def test_NormDataSet(mocker, dataset, caplog):
         lambda u, f: pathlib.Path(f).write_text(
             'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8'))
     with caplog.at_level(logging.INFO):
-        dataset.run(['download', 'map', 'validate'])
+        dataset.download()
+        dataset.map()
+        dataset.validate()
         assert dataset.raw_dir.joinpath('data.csv').exists()
         assert 'concepticon' in caplog.records[-1].message
         # Only the first gloss (by line number) matching a specific concept is extracted:
@@ -35,6 +37,8 @@ def test_NormDataSet2(mocker, dataset2, caplog):
         # do nothing! file is already there!
         lambda u, f: None)
     with caplog.at_level(logging.INFO):
-        dataset2.run(['download', 'map', 'validate'])
+        dataset2.download()
+        dataset2.map()
+        dataset2.validate()
         assert 'concepticon' in caplog.records[-1].message
         assert dataset2.mapped

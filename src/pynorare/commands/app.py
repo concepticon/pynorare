@@ -1,19 +1,13 @@
 """
 Create data for the web-application.
 """
-from pathlib import Path
-from tabulate import tabulate
-from pynorare import NoRaRe
-from tqdm import tqdm
 from collections import defaultdict
 import json
 
-def run(args):
 
-    norare = NoRaRe(args.norarepo)
-    concepts = set()
+def run(args):
     meta, data = {}, defaultdict(dict)
-    for i, ds in enumerate(norare.datasets.values()):
+    for i, ds in enumerate(args.api.datasets.values()):
         args.log.info('analyze '+ds.id)
         meta[ds.id] = {
                 'author': ds.author,
@@ -23,11 +17,9 @@ def run(args):
                 'target_languages': ds.target_language
                 }
         for cid, concept_ in ds.concepts.items():
-
             concept = {}
-            visited = set()
             for colid, column in ds.columns.items():
-                if colid in norare.annotations[ds.id]:
+                if colid in args.api.annotations[ds.id]:
                     concept[colid] = {
                             'value': concept_[colid],
                             'language': column.language,
