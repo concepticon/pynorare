@@ -15,9 +15,9 @@ import pynorare.commands
 
 
 def main(args=None, catch_all=False, parsed_args=None):
-    try:
+    try:  # pragma: no cover
         repos = Config.from_file().get_clone('concepticon')
-    except KeyError:
+    except KeyError:  # pragma: no cover
         repos = pathlib.Path('.')
 
     parser, subparsers = get_parser_and_subparsers('norare')
@@ -38,14 +38,14 @@ def main(args=None, catch_all=False, parsed_args=None):
     register_subcommands(subparsers, pynorare.commands)
 
     args = parsed_args or parser.parse_args(args=args)
-    if not hasattr(args, "main"):
+    if not hasattr(args, "main"):  # pragma: no cover
         parser.print_help()
         return 1
 
     args.api = NoRaRe(args.norarepo)
     with contextlib.ExitStack() as stack:
         stack.enter_context(Logging(args.log, level=args.log_level))
-        if args.repos_version:
+        if args.repos_version:  # pragma: no cover
             # If a specific version of the data is to be used, we make
             # use of a Catalog as context manager:
             stack.enter_context(Catalog(args.repos, tag=args.repos_version))
@@ -55,10 +55,10 @@ def main(args=None, catch_all=False, parsed_args=None):
             return args.main(args) or 0
         except KeyboardInterrupt:  # pragma: no cover
             return 0
-        except ParserError as e:
+        except ParserError as e:  # pragma: no cover
             print(e)
             return main([args._command, '-h'])
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             if catch_all:  # pragma: no cover
                 print(e)
                 return 1

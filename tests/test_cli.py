@@ -29,3 +29,11 @@ def test_workflow(_main, mocker):
     _main('download', 'dsid')
     _main('map', 'dsid')
     _main('validate', 'dsid')
+
+
+def test_check(_main):
+    _main('check')
+
+
+def test_app(_main):
+    _main('app')
