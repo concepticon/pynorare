@@ -95,7 +95,13 @@ class NoRaRe(API):
         API.__init__(self, repos)
         self.datasets = datasets or collections.OrderedDict()
 
-        concepticon = concepticon or Concepticon(Config.from_file().get_clone('concepticon'))
+        concepticon = concepticon
+        if not concepticon:
+            try:
+                concepticon = Concepticon(Config.from_file().get_clone('concepticon'))
+            except KeyError:
+                pass
+
         datasets = set()
         self.annotations = collections.defaultdict(lambda : collections.OrderedDict())
         for row in reader(self.repos / 'norare.tsv', delimiter='\t', dicts=True):
