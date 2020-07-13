@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pynorare',
-    version='0.1.0.dev0',
+    version='0.1.0',
     description='A Python library to handle NoRaRe data',
     author='Johann-Mattis List',
     author_email='mattis.list@lingpy.org',
