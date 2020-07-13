@@ -83,7 +83,7 @@ class NormDataSet:
         sheet = get_excel(self.raw_dir.joinpath(path), sidx, dicts)
         self.log.info('load data from {0}'.format(path))
         return sheet
-    
+
     def extract_data(self,
                      dicts,
                      gloss='ENGLISH',
@@ -94,7 +94,8 @@ class NormDataSet:
         pos_mapper = pos_mapper or {}
 
         rename = {str(c.titles): c.name for c in self.columns if c.titles}
-        mapped = collections.defaultdict(list)  # (conceptset ID, list of rows with matching glosses)
+        # (conceptset ID, list of rows with matching glosses)
+        mapped = collections.defaultdict(list)
 
         for i, row in enumerate(dicts, start=1):
             new_row = {rename.get(k, k): v for k, v in row.items()}

@@ -55,7 +55,7 @@ class ConceptSetMeta(object):
             concepts[row['CONCEPTICON_ID']] = collections.OrderedDict(
                 [(k.lower(), v) for k, v in row.items()])
         return concepts
-    
+
     @property
     def columns(self):
         columns = collections.OrderedDict(
@@ -64,25 +64,25 @@ class ConceptSetMeta(object):
 
         for c in self.table.tableSchema.columns:
             columns[c.name.lower()] = Column(
-                    dataset=self.id,
-                    name=c.name.lower(),
-                    structure=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'structure': ''})['structure'],
-                    type=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'type': ''})['type'],
-                    norare=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'norare': ''})['norare'],
-                    rating=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'rating': ''})['rating'],
-                    note=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'note': ''})['note'],
-                    source=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'source': ''})['source'] or self.refs,
-                    language = self.norare.annotations[self.id].get(
-                        c.name.lower(), {'language': ''})['language'],
-                    nameinsource=str(c.titles) if c.titles else '',
-                    other=self.norare.annotations[self.id].get(
-                        c.name.lower(), {'other': ''})['other'])
+                dataset=self.id,
+                name=c.name.lower(),
+                structure=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'structure': ''})['structure'],
+                type=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'type': ''})['type'],
+                norare=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'norare': ''})['norare'],
+                rating=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'rating': ''})['rating'],
+                note=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'note': ''})['note'],
+                source=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'source': ''})['source'] or self.refs,
+                language=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'language': ''})['language'],
+                nameinsource=str(c.titles) if c.titles else '',
+                other=self.norare.annotations[self.id].get(
+                    c.name.lower(), {'other': ''})['other'])
 
         return columns
 
@@ -103,19 +103,19 @@ class NoRaRe(API):
                 pass
 
         datasets = set()
-        self.annotations = collections.defaultdict(lambda : collections.OrderedDict())
+        self.annotations = collections.defaultdict(lambda: collections.OrderedDict())
         for row in reader(self.repos / 'norare.tsv', delimiter='\t', dicts=True):
             self.annotations[row['DATASET']][row['NAME'].lower()] = {
-                    k.lower(): row[k] for k in [
-                        'DATASET', 'NAME',
-                        'LANGUAGE', 'STRUCTURE',
-                        'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
+                k.lower(): row[k] for k in [
+                    'DATASET', 'NAME',
+                    'LANGUAGE', 'STRUCTURE',
+                    'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
             datasets.add(row['DATASET'])
 
         for row in reader(self.repos / 'concept_set_meta.tsv', delimiter='\t', dicts=True):
             row['norare'] = self
             row['path'] = self.repos.joinpath(
-                'concept_set_meta', row['ID'], row['ID']+'.tsv-metadata.json')
+                'concept_set_meta', row['ID'], row['ID'] + '.tsv-metadata.json')
             self.datasets[row['ID']] = ConceptSetMeta(**{k.lower(): v for k, v in row.items()})
             self.datasets[row['ID']].source_language = [
                 l.lower().strip() for l in self.datasets[row['ID']].source_language.split(',')]

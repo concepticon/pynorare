@@ -11,9 +11,10 @@ import xlrd
 
 def get_mappings(concepticon=None):
     concepticon = concepticon or Concepticon(Config.from_file().get_clone('concepticon'))
-    paths = {p.stem.split('-')[1]: p for p in concepticon.repos.joinpath('mappings').glob('map-*.tsv')}
-    mappings = {} 
-    for language, path in paths.items(): 
+    paths = {p.stem.split('-')[1]: p
+             for p in concepticon.repos.joinpath('mappings').glob('map-*.tsv')}
+    mappings = {}
+    for language, path in paths.items():
         mappings[language] = collections.defaultdict(set)
         for line in reader(path, delimiter='\t', dicts=True):
             gloss = line['GLOSS'].split('///')[1]

@@ -8,7 +8,7 @@ import collections
 def run(args):
     meta, data = {}, collections.defaultdict(dict)
     for i, ds in enumerate(args.api.datasets.values()):
-        args.log.info('analyze '+ds.id)
+        args.log.info('analyze ' + ds.id)
         meta[ds.id] = {
             'author': ds.author,
             'year': ds.year,

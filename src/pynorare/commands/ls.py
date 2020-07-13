@@ -70,7 +70,7 @@ def run(args):
         else:
             for i, (k, v) in enumerate(sorted(columns.items(), key=lambda x: (x[0][1], x[0][0]))):
                 table.append((
-                    i+1,
+                    i + 1,
                     k[0],
                     k[1],
                     ', '.join(list(set([x[0] for x in v])))[:30],
