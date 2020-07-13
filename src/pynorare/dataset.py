@@ -1,183 +1,125 @@
-import attr
+import inspect
+import pathlib
+import importlib.machinery
+import collections
+from urllib.request import urlretrieve
+
 from csvw.metadata import TableGroup
-from collections import defaultdict
-from pathlib import Path
+from csvw.dsv import reader
 
-from pynorare.files import (
-        get_mappings, get_excel, get_csv, download_file, download_zip
-        )
-from pynorare import log
-from pynorare.types import types
+from pynorare.files import get_mappings, get_excel, download_archive
+from pynorare.log import get_logger
+
+__all__ = ['NormDataSet', 'get_dataset_cls']
 
 
-@attr.s
+def get_dataset_cls(dsdir, dsid=None):
+    dsid = dsid or dsdir.name
+    mod = importlib.machinery.SourceFileLoader(
+        'norare.{}'.format(dsid.replace('-', '_')), str(dsdir / 'map.py')).load_module()
+    for _, cls in inspect.getmembers(mod, inspect.isclass):
+        print(_, cls)
+        if issubclass(cls, NormDataSet):
+            return cls
+
+
 class NormDataSet:
-    repos = attr.ib(default=Path('.'))
-    mapped = defaultdict(list)
-    mappings, concepticon = get_mappings()
     id = ""
 
-    @property
-    def raw_dir(self):
-        return self.repos.joinpath(
-                'concept_set_meta',
-                self.id,
-                'raw')
+    def __init__(self, repos=pathlib.Path('.'), concepticon=None, mappings=None):
+        self.repos = repos
+        self.mapped = collections.defaultdict(list)
+        if not mappings:  # pragma: no cover
+            mappings, concepticon = get_mappings(concepticon)
+        self.mappings, self.concepticon = mappings, concepticon
+        self.dir = self.repos / 'concept_set_meta' / self.id
+        self.raw_dir = self.dir / 'raw'
+        if not self.raw_dir.exists():
+            self.raw_dir.mkdir()
+        self.fname = self.id + '.tsv'
+        self.log = get_logger()
 
     @property
-    def types(self):
-        return types()
-
-    @property
-    def dir(self):
-        return self.repos.joinpath(
-                'concept_set_meta',
-                self.id)
-
-    def validate(self):
-        tbg = TableGroup.from_file(
-                self.dir.joinpath(self.id+'.tsv-metadata.json').as_posix())
-        mappings = list(tbg.tabledict[self.id+'.tsv'])
-        if not self.mapped:
-            self.map(write_file=False)
-        if len(self.mapped) == len(mappings):
-            log.info('metadata file can be loaded')
-
-        if 'CONCEPTICON_ID' in mappings[0] and 'CONCEPTICON_GLOSS' in mappings[0] and 'LINE_IN_SOURCE' in mappings[0]:
-            log.info('concepticon data present in data')
-
-    def map(self, write_file=True):
-        log.warning("Function MAP is not defined")
-        return 
-
-    def download(self):
-        log.warning("Function DOWNLOAD is not defined")
-        return
-
-    def download_zip(self, url, target, filename):
-        download_zip(
-                url,
-                self.raw_dir.joinpath(target).as_posix(),
-                filename,
-                self.raw_dir.as_posix()
-                )
-        log.download(url)
-
-    def download_file(self, url, target):
-        download_file(
-                url,
-                self.raw_dir.joinpath(target).as_posix())
-        log.download(url)
-
-    def get_csv(self, path, delimiter="\t", dicts=True, coding="utf-8"):
-        sheet = get_csv(
-                self.raw_dir.joinpath(path).as_posix(),
-                delimiter,
-                dicts,
-                coding)
-        log.info('loaded data {0}'.format(path))
-        return sheet
+    def tablegroup(self):
+        return TableGroup.from_file(self.dir.joinpath(self.fname + '-metadata.json'))
 
     @property
     def table(self):
-        return TableGroup.from_file(
-                    self.dir.joinpath(
-                        self.id+'.tsv-metadata.json')
-                    ).tabledict[self.id+'.tsv']
+        return self.tablegroup.tabledict[self.fname]
 
     @property
     def columns(self):
         return self.table.tableSchema.columns
 
+    def validate(self):
+        mappings = list(self.table)
+        if mappings:
+            self.log.info('metadata file can be loaded')
+
+        if 'CONCEPTICON_ID' in mappings[0] and \
+                'CONCEPTICON_GLOSS' in mappings[0] and \
+                'LINE_IN_SOURCE' in mappings[0]:
+            self.log.info('concepticon data present in data')
+
+    def map(self):  # pragma: no cover
+        self.log.warning("Function MAP is not defined")
+
+    def download(self):  # pragma: no cover
+        self.log.warning("Function DOWNLOAD is not defined")
+
+    def download_zip(self, url, target, filename):
+        download_archive(url, self.raw_dir.joinpath(target), filename, self.raw_dir)
+        self.log.info('Downloaded {0} successfully.'.format(url))
+
+    def download_file(self, url, target):
+        urlretrieve(url, str(self.raw_dir / target))
+        self.log.info('Downloaded {0} successfully.'.format(url))
+
+    def get_csv(self, path, delimiter="\t", dicts=True, coding="utf-8"):
+        self.log.info('load data from {0}'.format(path))
+        return list(reader(self.raw_dir / path, delimiter=delimiter, dicts=dicts, encoding=coding))
+
     def get_excel(self, path, sidx, dicts=True):
-        sheet = get_excel(self.raw_dir.joinpath(path).as_posix(), 
-                sidx,
-                dicts)
-        log.info('loaded data {0}'.format(path))
+        sheet = get_excel(self.raw_dir.joinpath(path), sidx, dicts)
+        self.log.info('load data from {0}'.format(path))
         return sheet
     
-    def extract_data(
-            self, 
-            dicts,
-            namespace=False,
-            header=False,
-            gloss='ENGLISH',
-            language='en',
-            write_file=True,
-            pos=False,
-            pos_mapper=False,
-            pos_name='POS'
-            ):
-        # if namespace is missing, retrieve it from the metadata file
-        if not namespace:
-            namespace, header = [], []
-            for col in self.columns:
-                header += [col.name]
-                if col.titles:
-                    namespace += [(
-                        str(col.titles), 
-                        str(col.name), 
-                        self.types.get(col.datatype.base, str)
-                            )]
+    def extract_data(self,
+                     dicts,
+                     gloss='ENGLISH',
+                     language='en',
+                     pos=False,
+                     pos_mapper=False,
+                     pos_name='POS'):
         pos_mapper = pos_mapper or {}
 
-        mapped = defaultdict(list)
-        for i, row in enumerate(dicts):
-            new_row = {b: c(row[a]) for a, b, c in namespace}
-            if not 'LINE_IN_SOURCE' in new_row:
-                new_row['LINE_IN_SOURCE'] = str(i+1)
-            if new_row[gloss] in self.mappings[language]:
+        rename = {str(c.titles): c.name for c in self.columns if c.titles}
+        mapped = collections.defaultdict(list)  # (conceptset ID, list of rows with matching glosses)
+
+        for i, row in enumerate(dicts, start=1):
+            new_row = {rename.get(k, k): v for k, v in row.items()}
+            new_row.setdefault('LINE_IN_SOURCE', i)
+            mappings = self.mappings[language].get(new_row[gloss])
+            if mappings:
+                match, priority = None, None
                 if pos:
-                    match, priority, pos = False, False, False
-                    for (
-                            match_, priority_, pos_ 
-                            ) in self.mappings[language][new_row[gloss]]:
-                        if pos_ == pos_mapper.get(
-                                new_row[pos_name], new_row[pos_name]):
-                            match, priority, pos = match_, priority_, pos_
-                    if match:
-                        new_row['CONCEPTICON_ID'] = str(match)
-                        new_row['CONCEPTICON_GLOSS'] = \
-                                self.concepticon.conceptsets[match].gloss
-                        new_row['_PRIORITY'] = priority
-                        mapped[match] += [new_row]
+                    for match, priority, pos_ in reversed(mappings):
+                        if pos_ == pos_mapper.get(new_row[pos_name], new_row[pos_name]) and match:
+                            break
                 else:
-                    match, priority, pos_ = self.mappings[language][new_row[gloss]][0]
+                    match, priority, pos_ = mappings[0]
+
+                if match:
                     new_row['CONCEPTICON_ID'] = str(match)
-                    new_row['CONCEPTICON_GLOSS'] = \
-                            self.concepticon.conceptsets[match].gloss
+                    new_row['CONCEPTICON_GLOSS'] = self.concepticon.conceptsets[match].gloss
                     new_row['_PRIORITY'] = priority
-                    mapped[match] += [new_row]
+                    mapped[match].append(new_row)
+
         table = []
-        for key, rows in sorted(mapped.items(), key=lambda x: (x[0], len(x[1]), x[1][0]['LINE_IN_SOURCE'])):
-            row = sorted(
-                    rows, 
-                    key=lambda x: (x['_PRIORITY']))[0]
-            table += [[row[h] for h in header]]
+        for key, rows in sorted(mapped.items(), key=lambda x: x[0]):
+            # We choose one representative gloss in the raw data for each conceptset ID, selecting
+            # by higher priority and lower line number in the raw data.
+            table.append(sorted(rows, key=lambda x: (x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
+
         self.mapped = mapped
-        self._header = header
-        self._table = table
-        if write_file:
-            self.writefile()
-
-    def run(self, args):
-        if 'download' in args:
-            self.download()
-        if 'map' in args:
-            self.map()
-            log.matches(len(self.mapped))
-        if 'validate' in args:
-            self.validate()
-    
-    def writefile(self):
-        with open(self.dir.joinpath(self.id+'.tsv').as_posix(), 'w') as f:
-            f.write('\t'.join(self._header)+'\n')
-            for line in self._table:
-                if not len(line) == len(self._header):
-                    raise ValueError(
-                        "header and lines in table are of different length")
-                f.write('\t'.join(line)+'\n')
-        log.written(self.id+'.tsv')
-
-
-
+        self.table.write(table, base=self.dir)

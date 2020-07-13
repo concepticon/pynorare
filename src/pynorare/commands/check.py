@@ -1,28 +1,24 @@
 """
 Check the norm data TSV file.
 """
-from cldfcatalog import Config, Catalog
-from pyconcepticon import Concepticon
-import tabulate
-from pynorare.norare import NoRaRe
 
-def run(args, test=False):
-    """Check the norm data list"""
 
-    # retrieve the text file
-    norare = NoRaRe(args.norarepo)
-    for i, ds in enumerate(norare.datasets.values()):
+def run(args):
+    for i, ds in enumerate(args.api.datasets.values()):
         visited = set()
         args.log.info('checking {0}'.format(ds.id))
         for colid, column in ds.columns.items():
-            if colid in norare.annotations[ds.id]:
-                uniq = '-'.join([column.language, column.norare,
-                    column.type, column.structure, column.other])
+            print(colid)
+            print(args.api.annotations[ds.id])
+            if colid in args.api.annotations[ds.id]:
+                uniq = '-'.join([
+                    column.language,
+                    column.norare,
+                    column.type,
+                    column.structure,
+                    column.other,
+                ])
                 if uniq in visited:
-                    args.log.warn('non-unique value {0} in {1} / {2}'.format(
-                        uniq,
-                        ds.id,
-                        colid))
+                    args.log.warn('non-unique value {0} in {1} / {2}'.format(uniq, ds.id, colid))
                 else:
                     visited.add(uniq)
-
