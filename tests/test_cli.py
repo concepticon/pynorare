@@ -21,6 +21,12 @@ def test_ls(_main, capsys):
     assert 'a_float' in out
 
 
+def test_stats(_main, capsys):
+    _main('stats', '--format=plain')
+    out, _ = capsys.readouterr()
+    assert out.strip().startswith('No.')
+
+
 def test_workflow(_main, mocker):
     mocker.patch(
         'pynorare.dataset.urlretrieve',
