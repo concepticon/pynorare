@@ -22,7 +22,7 @@ def test_ls(_main, capsys):
 
 
 def test_stats(_main, capsys):
-    _main('stats --format=plain')
+    _main('stats', '--format=plain')
     out, _ = capsys.readouterr()
     assert out.strip().startswith('No.')
 
