@@ -5,8 +5,6 @@ from collections import defaultdict
 
 from clldutils.clilib import Table, add_format
 
-from pynorare import NoRaRe
-from pynorare.util import progressbar
 
 
 def register(parser):
@@ -19,10 +17,9 @@ def register(parser):
 
 
 def run(args):
-    norare = NoRaRe(args.norarepo)
 
     concepts = defaultdict(list)
-    for i, ds in enumerate(norare.datasets.values()):
+    for i, ds in enumerate(args.api.datasets.values()):
         args.log.info('analyze ' + ds.id)
         for cid, concept in ds.concepts.items():
             if concept['concepticon_gloss']:
