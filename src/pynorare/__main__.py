@@ -42,7 +42,6 @@ def main(args=None, catch_all=False, parsed_args=None):
         parser.print_help()
         return 1
 
-    args.api = NoRaRe(args.norarepo)
     with contextlib.ExitStack() as stack:
         stack.enter_context(Logging(args.log, level=args.log_level))
         if args.repos_version:  # pragma: no cover
@@ -50,6 +49,7 @@ def main(args=None, catch_all=False, parsed_args=None):
             # use of a Catalog as context manager:
             stack.enter_context(Catalog(args.repos, tag=args.repos_version))
         args.repos = Concepticon(args.repos)
+        args.api = NoRaRe(args.norarepo, concepticon=args.repos)
         args.log.info('norare at {0}'.format(args.repos.repos))
         try:
             return args.main(args) or 0

@@ -1,11 +1,10 @@
 """
 List all datasets.
 """
-from collections import defaultdict
+import collections
 
 from clldutils.clilib import Table, add_format
 
-from pynorare import NoRaRe
 from pynorare.util import progressbar
 
 
@@ -19,14 +18,13 @@ def register(parser):
 
 
 def run(args):
-    norare = NoRaRe(args.norarepo)
     concepts = set()
-    columns = defaultdict(list)
+    columns = collections.defaultdict(list)
 
     headers = ['No', 'Dataset', 'Field', 'Ln', 'Norare', 'Structure', 'Type'] \
         if args.columns else ['ID', 'Author', 'Year', 'Languages', 'Tags', 'Ratings', 'Concepts']
     with Table(args, *headers) as table:
-        for i, ds in progressbar(enumerate(norare.datasets.values())):
+        for i, ds in progressbar(enumerate(args.api.datasets.values())):
             if not args.columns:
                 table.append([
                     ds.id,

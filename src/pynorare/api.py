@@ -96,7 +96,7 @@ class NoRaRe(API):
         self.datasets = datasets or collections.OrderedDict()
 
         concepticon = concepticon
-        if not concepticon:
+        if not concepticon:  # pragma: no cover
             try:
                 concepticon = Concepticon(Config.from_file().get_clone('concepticon'))
             except KeyError:
@@ -112,14 +112,6 @@ class NoRaRe(API):
                     'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
             datasets.add(row['DATASET'])
 
-        for row in reader(self.repos / 'concept_set_meta.tsv', delimiter='\t', dicts=True):
-            row['norare'] = self
-            row['path'] = self.repos.joinpath(
-                'concept_set_meta', row['ID'], row['ID'] + '.tsv-metadata.json')
-            self.datasets[row['ID']] = ConceptSetMeta(**{k.lower(): v for k, v in row.items()})
-            self.datasets[row['ID']].source_language = [
-                l.lower().strip() for l in self.datasets[row['ID']].source_language.split(',')]
-
         # get bibliography
         self.refs = collections.OrderedDict()
         with self.repos.joinpath('references', 'references.bib').open(encoding='utf-8') as fp:
@@ -130,6 +122,14 @@ class NoRaRe(API):
         all_refs = set(self.refs)
         if concepticon:
             all_refs = all_refs.union(concepticon.bibliography)
+
+        for row in reader(self.repos / 'concept_set_meta.tsv', delimiter='\t', dicts=True):
+            row['norare'] = self
+            row['path'] = self.repos.joinpath(
+                'concept_set_meta', row['ID'], row['ID'] + '.tsv-metadata.json')
+            self.datasets[row['ID']] = ConceptSetMeta(**{k.lower(): v for k, v in row.items()})
+            self.datasets[row['ID']].source_language = [
+                l.lower().strip() for l in self.datasets[row['ID']].source_language.split(',')]
 
         # remaining datasets come from concepticon, we identify them from datasets
         concepticon_datasets = [d for d in datasets if d not in self.datasets]
@@ -150,5 +150,10 @@ class NoRaRe(API):
                 path=concepticon.repos.joinpath(
                     'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json')
             )
-            if ds.refs and not set(ds.refs).issubset(all_refs):
-                raise ValueError('missing references.bib: {}'.format(ds.refs))
+
+        for dataset in self.datasets.values():
+            if dataset.refs:
+                refs = [dataset.refs] if isinstance(dataset.refs, str) else dataset.refs
+                for ref in refs:
+                    if ref not in all_refs:  # pragma: no cover
+                        raise ValueError('missing references.bib: {}'.format(ref))

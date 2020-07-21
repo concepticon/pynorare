@@ -6,7 +6,6 @@ from collections import defaultdict
 from clldutils.clilib import Table, add_format
 
 
-
 def register(parser):
     add_format(parser, default='pipe')
     parser.add_argument(
@@ -26,7 +25,6 @@ def run(args):
                 concepts[cid, concept['concepticon_gloss']] += [ds.id]
     headers = ['No.', 'ID', 'Gloss', 'Datasets']
     with Table(args, *headers) as table:
-        for i, ((cid, cgl), clists) in enumerate(sorted(concepts.items(), key=lambda x:
-                (len(x[1]), x[0][0]))):
-            table.append([i+1, cid, cgl, len(clists)])
-
+        for i, ((cid, cgl), clists) in enumerate(
+                sorted(concepts.items(), key=lambda x: (len(x[1]), x[0][0]))):
+            table.append([i + 1, cid, cgl, len(clists)])

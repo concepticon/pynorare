@@ -8,8 +8,6 @@ def run(args):
         visited = set()
         args.log.info('checking {0}'.format(ds.id))
         for colid, column in ds.columns.items():
-            #print(colid)
-            #print(args.api.annotations[ds.id])
             if colid in args.api.annotations[ds.id]:
                 uniq = '-'.join([
                     column.language,
@@ -18,7 +16,7 @@ def run(args):
                     column.structure,
                     column.other,
                 ])
-                if uniq in visited:
+                if uniq in visited:  # pragma: no cover
                     args.log.warn('non-unique value {0} in {1} / {2}'.format(uniq, ds.id, colid))
                 else:
                     visited.add(uniq)
