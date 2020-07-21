@@ -8,8 +8,8 @@ def run(args):
         visited = set()
         args.log.info('checking {0}'.format(ds.id))
         for colid, column in ds.columns.items():
-            print(colid)
-            print(args.api.annotations[ds.id])
+            #print(colid)
+            #print(args.api.annotations[ds.id])
             if colid in args.api.annotations[ds.id]:
                 uniq = '-'.join([
                     column.language,

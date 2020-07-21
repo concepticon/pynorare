@@ -120,6 +120,17 @@ class NoRaRe(API):
             self.datasets[row['ID']].source_language = [
                 l.lower().strip() for l in self.datasets[row['ID']].source_language.split(',')]
 
+        # get bibliography
+        self.refs = collections.OrderedDict()
+        with self.repos.joinpath('references', 'references.bib').open(encoding='utf-8') as fp:
+            for key, entry in pybtex.database.parse_string(
+                    fp.read(), bib_format='bibtex').entries.items():
+                self.refs[key] = Source.from_entry(key, entry)
+
+        all_refs = set(self.refs)
+        if concepticon:
+            all_refs = all_refs.union(concepticon.bibliography)
+
         # remaining datasets come from concepticon, we identify them from datasets
         concepticon_datasets = [d for d in datasets if d not in self.datasets]
         for dataset in concepticon_datasets:
@@ -139,10 +150,5 @@ class NoRaRe(API):
                 path=concepticon.repos.joinpath(
                     'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json')
             )
-
-        # get bibliography
-        self.refs = collections.OrderedDict()
-        with self.repos.joinpath('references', 'references.bib').open(encoding='utf-8') as fp:
-            for key, entry in pybtex.database.parse_string(
-                    fp.read(), bib_format='bibtex').entries.items():
-                self.refs[key] = Source.from_entry(key, entry)
+            if ds.refs and not set(ds.refs).issubset(all_refs):
+                raise ValueError('missing references.bib: {}'.format(ds.refs))
