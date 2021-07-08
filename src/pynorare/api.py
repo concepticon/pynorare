@@ -129,7 +129,7 @@ class NoRaRe(API):
                 'concept_set_meta', row['ID'], row['ID'] + '.tsv-metadata.json')
             self.datasets[row['ID']] = ConceptSetMeta(**{k.lower(): v for k, v in row.items()})
             self.datasets[row['ID']].source_language = [
-                l.lower().strip() for l in self.datasets[row['ID']].source_language.split(',')]
+                lg.lower().strip() for lg in self.datasets[row['ID']].source_language.split(',')]
 
         # remaining datasets come from concepticon, we identify them from datasets
         concepticon_datasets = [d for d in datasets if d not in self.datasets]
