@@ -31,7 +31,8 @@ setup(
         'csvw>=1.6',
         "tqdm",
         'uritemplate',
-        'xlrd~=1.0'
+        'xlrd~=2.0',
+        "openpyxl>=1.1.0",
     ],
     extras_require={
         'dev': ['flake8', 'wheel', 'twine', 'tox'],

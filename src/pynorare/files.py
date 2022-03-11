@@ -6,6 +6,8 @@ from cldfcatalog import Config
 from csvw.dsv import reader
 from pyconcepticon import Concepticon
 
+import openpyxl
+
 import xlrd
 
 
@@ -30,9 +32,14 @@ def get_mappings(concepticon=None):
 
 
 def get_excel(path, sheet_index, dicts=False):
-    xlfile = xlrd.open_workbook(str(path))
-    sheet = xlfile.sheet_by_index(sheet_index)
-    sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
+    if path.suffix == ".xlsx":
+        xlfile = openpyxl.load_workbook(str(path), data_only=True)
+        sheet = xlfile[xlfile.sheetnames[sheet_index]]
+        sheet = [[cell.value for cell in row] for row in sheet.rows]
+    else:
+        xlfile = xlrd.open_workbook(str(path))
+        sheet = xlfile.sheet_by_index(sheet_index)
+        sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
     return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
 
 
