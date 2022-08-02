@@ -1,6 +1,6 @@
 from pyconcepticon import Concepticon
 
-from pynorare.dataset import get_dataset_cls
+from pynorare.dataset import NormDataSet
 
 
 def add_datasets(parser):
@@ -13,5 +13,5 @@ def add_datasets(parser):
 
 def iter_datasets(args):
     for dsid in args.dataset:
-        cls = get_dataset_cls(args.api.datasets[dsid].path.parent)
-        yield cls(repos=args.norarepo, concepticon=Concepticon(args.repos.repos))
+        yield NormDataSet.from_datasetmeta(
+            args.api.datasets[dsid], concepticon=Concepticon(args.repos.repos))

@@ -18,7 +18,7 @@ def test_ls(_main, capsys):
     assert 'dsid' in out
     _main('ls', '--columns')
     out, _ = capsys.readouterr()
-    assert 'a_float' in out
+    assert 'A_FLOAT' in out
 
 
 def test_stats(_main, capsys):
@@ -39,7 +39,3 @@ def test_workflow(_main, mocker):
 
 def test_check(_main):
     _main('check')
-
-
-def test_app(_main):
-    _main('app')

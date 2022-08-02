@@ -1,4 +1,7 @@
+import pathlib
 import collections
+import importlib.util
+import importlib.machinery
 
 from csvw.metadata import TableGroup
 from csvw.dsv import reader
@@ -13,40 +16,69 @@ __all__ = ['NoRaRe']
 
 
 @attr.s
-class Column(object):
+class Variable(object):
     dataset = attr.ib()
     name = attr.ib()
     structure = attr.ib()
     type = attr.ib()
-    norare = attr.ib()
+    norare = attr.ib(validator=attr.validators.in_(['ratings', 'norms', 'relations']))
     rating = attr.ib()
-    nameinsource = attr.ib()
     note = attr.ib()
     language = attr.ib()
     source = attr.ib()
     other = attr.ib()
+    nameinsource = attr.ib(default=False)
+
+
+def existing_file(instance, attribute, value):
+    if not (value.exists() and value.is_file()):
+        raise ValueError(value)
 
 
 @attr.s
-class ConceptSetMeta(object):
+class DatasetMeta(object):
     id = attr.ib()
     author = attr.ib()
     year = attr.ib()
     tags = attr.ib(
         repr=False,
         converter=lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else x)
-    source_language = attr.ib(repr=False)
+    source_language = attr.ib(
+        repr=False,
+        converter=lambda x: [y.strip() for y in x.split(',')] if isinstance(x, str) else x)
     target_language = attr.ib(repr=False)
     url = attr.ib(repr=False)
     refs = attr.ib(repr=False)
     note = attr.ib(repr=False)
     alias = attr.ib(repr=False)
-    norare = attr.ib(default=None, repr=False)
-    path = attr.ib(default=None, repr=False)
+    csvwmdpath = attr.ib(
+        repr=False,
+        converter=lambda s: pathlib.Path(s),
+        validator=existing_file)
+    variables = attr.ib(repr=False, validator=attr.validators.instance_of(list))
+    from_concepticon = attr.ib(validator=attr.validators.instance_of(bool))
+    norare_dsdir = attr.ib(converter=lambda s: pathlib.Path(s))
+
+    def __attrs_post_init__(self):
+        colname2title = {
+            c.name: str(c.titles) if c.titles else '' for c in self.table.tableSchema.columns}
+        for v in self.variables:
+            v.nameinsource = colname2title[v.name]
+
+    @property
+    def module(self):
+        modp = self.norare_dsdir / 'map.py'
+        if modp.exists():
+            loader = importlib.machinery.SourceFileLoader(
+                'norare.{}'.format(self.id.replace('-', '_')), str(modp))
+            mod = importlib.util.module_from_spec(
+                importlib.util.spec_from_loader(loader.name, loader))
+            loader.exec_module(mod)
+            return mod
 
     @property
     def table(self):
-        return TableGroup.from_file(self.path).tabledict[self.id + '.tsv']
+        return TableGroup.from_file(self.csvwmdpath).tabledict[self.id + '.tsv']
 
     @property
     def concepts(self):
@@ -56,44 +88,15 @@ class ConceptSetMeta(object):
                 [(k.lower(), v) for k, v in row.items()])
         return concepts
 
-    @property
-    def columns(self):
-        columns = collections.OrderedDict(
-            [(c.name.lower(), {'nameinsource': str(c.titles) if c.titles else ''})
-             for c in self.table.tableSchema.columns])
-
-        for c in self.table.tableSchema.columns:
-            columns[c.name.lower()] = Column(
-                dataset=self.id,
-                name=c.name.lower(),
-                structure=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'structure': ''})['structure'],
-                type=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'type': ''})['type'],
-                norare=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'norare': ''})['norare'],
-                rating=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'rating': ''})['rating'],
-                note=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'note': ''})['note'],
-                source=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'source': ''})['source'] or self.refs,
-                language=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'language': ''})['language'],
-                nameinsource=str(c.titles) if c.titles else '',
-                other=self.norare.annotations[self.id].get(
-                    c.name.lower(), {'other': ''})['other'])
-
-        return columns
-
 
 class NoRaRe(API):
     """
     Basic class for handling the norms-rates-relations data.
     """
-    def __init__(self, repos=None, datasets=None, concepticon=None):
+    def __init__(self, repos=None, concepticon=None):
         API.__init__(self, repos)
-        self.datasets = datasets or collections.OrderedDict()
+        self.datasets = collections.OrderedDict()
+        datasetsdir = self.repos / 'datasets'
 
         concepticon = concepticon
         if not concepticon:  # pragma: no cover
@@ -102,40 +105,33 @@ class NoRaRe(API):
             except KeyError:
                 pass
 
-        datasets = set()
-        self.annotations = collections.defaultdict(lambda: collections.OrderedDict())
+        variables = collections.defaultdict(list)
         for row in reader(self.repos / 'norare.tsv', delimiter='\t', dicts=True):
-            self.annotations[row['DATASET']][row['NAME'].lower()] = {
-                k.lower(): row[k] for k in [
-                    'DATASET', 'NAME',
-                    'LANGUAGE', 'STRUCTURE',
-                    'TYPE', 'NORARE', 'RATING', 'SOURCE', 'OTHER', 'NOTE']}
-            datasets.add(row['DATASET'])
+            variables[row['DATASET']].append(
+                Variable(**{k.lower(): v for k, v in row.items()}))
 
         # get bibliography
         self.refs = collections.OrderedDict()
-        with self.repos.joinpath('references', 'references.bib').open(encoding='utf-8') as fp:
-            for key, entry in pybtex.database.parse_string(
-                    fp.read(), bib_format='bibtex').entries.items():
-                self.refs[key] = Source.from_entry(key, entry)
+        for key, entry in pybtex.database.parse_string(
+                self.repos.joinpath('references', 'references.bib').read_text(encoding='utf8'),
+                bib_format='bibtex').entries.items():
+            self.refs[key] = Source.from_entry(key, entry)
 
-        all_refs = set(self.refs)
-        if concepticon:
-            all_refs = all_refs.union(concepticon.bibliography)
+        all_refs = set(self.refs).union(concepticon.bibliography if concepticon else {})
 
-        for row in reader(self.repos / 'concept_set_meta.tsv', delimiter='\t', dicts=True):
-            row['norare'] = self
-            row['path'] = self.repos.joinpath(
-                'concept_set_meta', row['ID'], row['ID'] + '.tsv-metadata.json')
-            self.datasets[row['ID']] = ConceptSetMeta(**{k.lower(): v for k, v in row.items()})
-            self.datasets[row['ID']].source_language = [
-                lg.lower().strip() for lg in self.datasets[row['ID']].source_language.split(',')]
+        for row in reader(self.repos / 'datasets.tsv', delimiter='\t', dicts=True):
+            self.datasets[row['ID']] = DatasetMeta(
+                variables=variables[row['ID']],
+                csvwmdpath=datasetsdir / row['ID'] / '{}.tsv-metadata.json'.format(row['ID']),
+                from_concepticon=False,
+                norare_dsdir=datasetsdir / row['ID'],
+                **{k.lower(): v for k, v in row.items()})
 
         # remaining datasets come from concepticon, we identify them from datasets
-        concepticon_datasets = [d for d in datasets if d not in self.datasets]
-        for dataset in concepticon_datasets:
+        for dataset in [d for d in variables if d not in self.datasets]:
+            csvwmdpath = datasetsdir / dataset / '{}.tsv-metadata.json'.format(dataset)
             ds = concepticon.conceptlists[dataset]
-            self.datasets[ds.id] = ConceptSetMeta(
+            self.datasets[ds.id] = DatasetMeta(
                 id=ds.id,
                 author=ds.author,
                 year=ds.year,
@@ -146,9 +142,11 @@ class NoRaRe(API):
                 refs=ds.refs,
                 note=ds.note,
                 alias=ds.alias,
-                norare=self,
-                path=concepticon.repos.joinpath(
-                    'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json')
+                variables=variables[dataset],
+                csvwmdpath=csvwmdpath if csvwmdpath.exists() else concepticon.repos.joinpath(
+                    'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json'),
+                from_concepticon=True,
+                norare_dsdir=datasetsdir / dataset,
             )
 
         for dataset in self.datasets.values():

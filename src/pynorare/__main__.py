@@ -50,7 +50,7 @@ def main(args=None, catch_all=False, parsed_args=None):
             stack.enter_context(Catalog(args.repos, tag=args.repos_version))
         args.repos = Concepticon(args.repos)
         args.api = NoRaRe(args.norarepo, concepticon=args.repos)
-        args.log.info('norare at {0}'.format(args.repos.repos))
+        args.log.info('norare at {0}'.format(args.norarepo))
         try:
             return args.main(args) or 0
         except KeyboardInterrupt:  # pragma: no cover

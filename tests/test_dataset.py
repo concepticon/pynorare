@@ -3,14 +3,14 @@ import pathlib
 
 import pytest
 
-from pynorare import get_dataset_cls
+from pynorare import NormDataSet, NoRaRe
 
 
 @pytest.fixture
 def dataset2(concepticon_api, repos):
-    cls = get_dataset_cls(repos / 'concept_set_meta' / 'ds2')
-    return cls(
-        repos=repos,
+    api = NoRaRe(repos)
+    return NormDataSet.from_datasetmeta(
+        api.datasets['ds2'],
         concepticon=concepticon_api,
         mappings={'fr': {'hut': [('1', 3, 'THING')]}})
 
@@ -27,8 +27,8 @@ def test_NormDataSet(mocker, dataset, caplog):
         assert dataset.raw_dir.joinpath('data.csv').exists()
         assert 'concepticon' in caplog.records[-1].message
         # Only the first gloss (by line number) matching a specific concept is extracted:
-        assert len(list(dataset.table)) == 1
-        assert list(dataset.table)[0]['FRENCH'] == 'the gloss'
+        assert len(list(dataset.meta.table)) == 1
+        assert list(dataset.meta.table)[0]['FRENCH'] == 'the gloss'
 
 
 def test_NormDataSet2(mocker, dataset2, caplog):

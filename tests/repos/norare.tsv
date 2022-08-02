@@ -1,4 +1,3 @@
 DATASET	NAME	STRUCTURE	TYPE	OTHER	NORARE	RATING	LANGUAGE	SOURCE	NOTE
-dsid	Dataset	numeric	semantic	in degree	relations	user	fr		The number.
-ds2	a_float	numeric	semantic	in degree	relations	user	fr		The number.
-Perrin-2010-110	name	numeric	semantic	in degree	relations	user	fr		The number.
+dsid	AN_INT	numeric	semantic	in degree	relations	user	fr		The number.
+ds2	A_FLOAT	numeric	semantic	in degree	relations	user	fr		The number.

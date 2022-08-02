@@ -1,58 +1,45 @@
 import inspect
-import pathlib
-import importlib.machinery
 import collections
 from urllib.request import urlretrieve
 
-from csvw.metadata import TableGroup
 from csvw.dsv import reader
 
 from pynorare.files import get_mappings, get_excel, download_archive
 from pynorare.log import get_logger
 
-__all__ = ['NormDataSet', 'get_dataset_cls']
-
-
-def get_dataset_cls(dsdir, dsid=None):
-    dsid = dsid or dsdir.name
-    mod = importlib.machinery.SourceFileLoader(
-        'norare.{}'.format(dsid.replace('-', '_')), str(dsdir / 'map.py')).load_module()
-    for _, cls in inspect.getmembers(mod, inspect.isclass):
-        print(_, cls)
-        if issubclass(cls, NormDataSet):
-            return cls
+__all__ = ['NormDataSet']
 
 
 class NormDataSet:
     id = ""
 
-    def __init__(self, repos=pathlib.Path('.'), concepticon=None, mappings=None):
-        self.repos = repos
+    def __init__(self, dsmeta, concepticon=None, mappings=None):
+        self.meta = dsmeta
         self.mapped = collections.defaultdict(list)
         if not mappings:  # pragma: no cover
             mappings, concepticon = get_mappings(concepticon)
         self.mappings, self.concepticon = mappings, concepticon
-        self.dir = self.repos / 'concept_set_meta' / self.id
-        self.raw_dir = self.dir / 'raw'
-        if not self.raw_dir.exists():
+        self.raw_dir = self.meta.norare_dsdir / 'raw'
+        if not self.meta.from_concepticon and not self.raw_dir.exists():
             self.raw_dir.mkdir()
         self.fname = self.id + '.tsv'
+        self.mdname = self.fname + '-metadata.json'
         self.log = get_logger()
 
-    @property
-    def tablegroup(self):
-        return TableGroup.from_file(self.dir.joinpath(self.fname + '-metadata.json'))
-
-    @property
-    def table(self):
-        return self.tablegroup.tabledict[self.fname]
+    @classmethod
+    def from_datasetmeta(cls, dsmeta, concepticon=None, mappings=None):
+        if dsmeta.module:
+            for _, cls_ in inspect.getmembers(dsmeta.module, inspect.isclass):
+                if issubclass(cls_, NormDataSet):
+                    return cls_(dsmeta, concepticon=concepticon, mappings=mappings)
+        return cls(dsmeta, concepticon=concepticon, mappings=mappings)
 
     @property
     def columns(self):
-        return self.table.tableSchema.columns
+        return self.meta.table.tableSchema.columns
 
     def validate(self):
-        mappings = list(self.table)
+        mappings = list(self.meta.table)
         if mappings:
             self.log.info('metadata file can be loaded')
 
@@ -123,4 +110,4 @@ class NormDataSet:
             table.append(sorted(rows, key=lambda x: (x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
 
         self.mapped = mapped
-        self.table.write(table, base=self.dir)
+        self.meta.table.write(table, base=self.meta.norare_dsdir)

@@ -6,7 +6,8 @@ from clldutils import jsonlib
 from pyconcepticon.test_util import TEST_REPOS
 from pyconcepticon import Concepticon
 
-from pynorare.dataset import get_dataset_cls
+from pynorare import NoRaRe
+from pynorare.dataset import NormDataSet
 
 
 @pytest.fixture
@@ -38,9 +39,9 @@ ID\tGLOSS\tPRIORITY
 
 @pytest.fixture
 def dataset(concepticon_api, repos):
-    cls = get_dataset_cls(repos / 'concept_set_meta' / 'dsid')
-    return cls(
-        repos=repos,
+    api = NoRaRe(repos)
+    return NormDataSet.from_datasetmeta(
+        api.datasets['dsid'],
         concepticon=concepticon_api,
         mappings={'fr': {
             'the gloss': [('1', 3, 'THING')],

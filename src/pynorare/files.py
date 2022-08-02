@@ -5,7 +5,6 @@ from urllib.request import urlretrieve
 from cldfcatalog import Config
 from csvw.dsv import reader
 from pyconcepticon import Concepticon
-
 import xlrd
 
 
@@ -24,8 +23,7 @@ def get_mappings(concepticon=None):
         for k, v in mappings[language].items():
             # We sort concepticon matches for a given gloss by descending priority and ascending
             # Concepticon ID.
-            mappings[language][k] = sorted(
-                v, key=lambda x: (x[1], -int(x[0])), reverse=True)
+            mappings[language][k] = sorted(v, key=lambda x: (x[1], -int(x[0])), reverse=True)
     return mappings, concepticon
 
 
