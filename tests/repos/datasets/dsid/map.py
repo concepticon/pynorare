@@ -1,8 +1,6 @@
 from pynorare.dataset import NormDataSet
 
 class Dataset(NormDataSet):
-    id = "dsid"
-
     def download(self):
         self.download_file('http://example.com', 'data.csv')
 

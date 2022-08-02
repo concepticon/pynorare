@@ -2,8 +2,6 @@ from pynorare.dataset import NormDataSet
 
 
 class Dataset(NormDataSet):
-    id = "ds2"
-
     def download(self):
         self.download_zip('http://example.com/f.xlsx.zip', 'f.zip', 'norare.xlsx')
 

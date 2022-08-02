@@ -11,18 +11,16 @@ __all__ = ['NormDataSet']
 
 
 class NormDataSet:
-    id = ""
-
     def __init__(self, dsmeta, concepticon=None, mappings=None):
         self.meta = dsmeta
         self.mapped = collections.defaultdict(list)
-        if not mappings:  # pragma: no cover
+        if not mappings:
             mappings, concepticon = get_mappings(concepticon)
         self.mappings, self.concepticon = mappings, concepticon
         self.raw_dir = self.meta.norare_dsdir / 'raw'
         if not self.meta.from_concepticon and not self.raw_dir.exists():
             self.raw_dir.mkdir()
-        self.fname = self.id + '.tsv'
+        self.fname = self.meta.id + '.tsv'
         self.mdname = self.fname + '-metadata.json'
         self.log = get_logger()
 
