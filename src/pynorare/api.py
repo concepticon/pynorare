@@ -1,6 +1,9 @@
+import logging
 import pathlib
 import zipfile
+import functools
 import collections
+import urllib.error
 import urllib.parse
 import urllib.request
 import importlib.util
@@ -15,8 +18,7 @@ from clldutils.source import Source
 from clldutils.apilib import API
 import pybtex.database
 
-from pynorare.log import get_logger
-from pynorare.files import get_mappings, get_excel
+from pynorare.files import get_mappings, get_excel, download_file
 
 __all__ = ['NoRaRe']
 
@@ -64,7 +66,7 @@ class Dataset(object):
     variables = attr.ib(repr=False, validator=attr.validators.instance_of(list))
     from_concepticon = attr.ib(validator=attr.validators.instance_of(bool))
     norare_dsdir = attr.ib(converter=lambda s: pathlib.Path(s))
-    log = attr.ib(default=get_logger())
+    log = attr.ib(default=logging.getLogger(__name__))
 
     def __attrs_post_init__(self):
         colname2title = {
@@ -116,33 +118,38 @@ class Dataset(object):
                 'LINE_IN_SOURCE' in mappings[0]:
             self.log.info('concepticon data present in data')
 
+    def _run_function(self, name, *args, **kw):
+        if self.module and hasattr(self.module, name):
+            self.log.info('{}: Running "{}"'.format(self.id, name))
+            getattr(self.module, name)(self, *args, **kw)
+        else:  # pragma: no cover
+            self.log.warning('{}: Function "{}" is not defined'.format(self.id, name))
+
     def map(self, concepticon=None, mappings=None):
         if not mappings:
             mappings, _ = get_mappings(concepticon)
+        self._run_function('map', concepticon, mappings)
 
-        if self.module and hasattr(self.module, 'map'):
-            self.module.map(self, concepticon, mappings)
-        else:
-            self.log.warning("Function MAP is not defined")  # pragma: no cover
+    def download(self):
+        self._run_function('download')
 
-    def download(self):  # pragma: no cover
-        if self.module and hasattr(self.module, 'download'):
-            self.module.download(self)
-        else:
-            self.log.warning("Function DOWNLOAD is not defined")
-
-    def download_zip(self, url, target, filename, cls=zipfile.ZipFile):
-        urllib.request.urlretrieve(url, str(self.raw_dir / target))
-        with self.raw_dir.joinpath(target).open('rb') as f:
+    def download_zip(self, url, target=None, filename=None, cls=zipfile.ZipFile):
+        with self.download_file(url, target=target).open('rb') as f:
             with cls(f) as archive:
-                archive.extract(filename, path=str(self.raw_dir))
-        self.log.info('Downloaded {0} successfully.'.format(url))
+                archive.extract(filename or archive.infolist()[0], path=str(self.raw_dir))
+        self.log.info('Downloaded and unzipped {0} successfully.'.format(url))
 
-    def download_file(self, url, target=None):
+    def download_file(self, url, target=None, overwrite=False):
         if not target:
             target = urllib.parse.urlparse(url).path.split('/')[-1]
-        urllib.request.urlretrieve(url, str(self.raw_dir / target))
-        self.log.info('Downloaded {0} successfully.'.format(url))
+        if (not self.raw_dir.joinpath(target).exists()) or overwrite:
+            try:
+                urllib.request.urlretrieve(url, str(self.raw_dir / target))
+            except urllib.error.HTTPError:  # pragma: no cover
+                # Try with requests:
+                download_file(url, self.raw_dir / target)
+            self.log.info('Downloaded {0} successfully.'.format(url))
+        return self.raw_dir / target
 
     def get_csv(self, path, delimiter="\t", dicts=True, coding="utf-8"):
         self.log.info('load data from {0}'.format(path))
@@ -165,8 +172,15 @@ class Dataset(object):
         pos_mapper = pos_mapper or {}
         if isinstance(dicts, str):
             p = self.raw_dir.joinpath(dicts)
-            if p.exists() and p.suffix in ['.xlsx', '.xls']:
-                dicts = self.get_excel(dicts)
+            if p.exists():
+                conv = {
+                    '.xlsx': self.get_excel,
+                    '.xls': self.get_excel,
+                    '.csv': functools.partial(self.get_csv, delimiter=','),
+                    '.tsv': self.get_csv,
+                }
+                if p.suffix in conv:
+                    dicts = conv[p.suffix](dicts)
 
         rename = {str(c.titles): c.name for c in self.columns if c.titles}
         # (conceptset ID, list of rows with matching glosses)
@@ -196,9 +210,10 @@ class Dataset(object):
             # We choose one representative gloss in the raw data for each conceptset ID, selecting
             # by higher priority and lower line number in the raw data.
             table.append(sorted(rows, key=lambda x: (x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
+        self.write_table(table)
 
-        self.mapped = mapped
-        self.table.write(table, base=self.norare_dsdir)
+    def write_table(self, items):
+        self.table.write(items, base=self.norare_dsdir)
 
 
 class NoRaRe(API):

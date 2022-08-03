@@ -1,5 +1,6 @@
 import collections
 
+import requests
 from cldfcatalog import Config
 from csvw.dsv import reader
 from pyconcepticon import Concepticon
@@ -34,3 +35,12 @@ def get_excel(path, sheet_index, dicts=False):
         sheet = xlrd.open_workbook(str(path)).sheet_by_index(sheet_index)
         sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
     return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
+
+
+def download_file(url, path):  # pragma: no cover
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with path.open('wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return path
