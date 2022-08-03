@@ -36,6 +36,12 @@ def test_workflow(_main, mocker):
     _main('map', 'dsid')
     _main('validate', 'dsid')
 
+    mocker.patch(
+        'pynorare.api.urllib.request',
+        mocker.Mock(urlretrieve=lambda u, t: 1))
+    _main('download', 'ds2')
+    _main('map', 'ds2')
+
 
 def test_check(_main):
     _main('check')

@@ -4,5 +4,4 @@ def download(dataset):
 
 
 def map(dataset, concepticon, mappings):
-    sheet = dataset.get_excel('norare.xlsx', 0, dicts=True)
-    dataset.extract_data(sheet, concepticon, mappings, gloss='FRENCH', language='fr')
+    dataset.extract_data('norare.xlsx', concepticon, mappings, gloss='FRENCH', language='fr')

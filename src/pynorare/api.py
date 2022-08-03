@@ -160,6 +160,10 @@ class Dataset(object):
                      pos_mapper=False,
                      pos_name='POS'):
         pos_mapper = pos_mapper or {}
+        if isinstance(dicts, str):
+            p = self.raw_dir.joinpath(dicts)
+            if p.exists() and p.suffix in ['.xlsx', '.xls']:
+                dicts = self.get_excel(dicts)
 
         rename = {str(c.titles): c.name for c in self.columns if c.titles}
         # (conceptset ID, list of rows with matching glosses)
