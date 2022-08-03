@@ -1,5 +1,5 @@
 def download(dataset):
-    dataset.download_file('http://example.com', 'data.csv')
+    dataset.download_file('http://example.com/data.csv')
 
 
 def map(dataset, concepticon, mappings):

@@ -1,6 +1,7 @@
 import pathlib
 import zipfile
 import collections
+import urllib.parse
 import urllib.request
 import importlib.util
 import importlib.machinery
@@ -137,7 +138,9 @@ class Dataset(object):
                 archive.extract(filename, path=str(self.raw_dir))
         self.log.info('Downloaded {0} successfully.'.format(url))
 
-    def download_file(self, url, target):
+    def download_file(self, url, target=None):
+        if not target:
+            target = urllib.parse.urlparse(url).path.split('/')[-1]
         urllib.request.urlretrieve(url, str(self.raw_dir / target))
         self.log.info('Downloaded {0} successfully.'.format(url))
 
