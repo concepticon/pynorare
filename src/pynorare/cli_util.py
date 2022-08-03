@@ -1,6 +1,4 @@
-from pyconcepticon import Concepticon
-
-from pynorare.dataset import NormDataSet
+import pathlib
 
 
 def add_datasets(parser):
@@ -13,5 +11,6 @@ def add_datasets(parser):
 
 def iter_datasets(args):
     for dsid in args.dataset:
-        yield NormDataSet.from_datasetmeta(
-            args.api.datasets[dsid], concepticon=Concepticon(args.repos.repos))
+        if pathlib.Path(dsid).exists():
+            dsid = pathlib.Path(dsid).name  # pragma: no cover
+        yield args.api.datasets[dsid]

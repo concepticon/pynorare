@@ -29,9 +29,9 @@ def test_stats(_main, capsys):
 
 def test_workflow(_main, mocker):
     mocker.patch(
-        'pynorare.dataset.urlretrieve',
-        lambda u, f: pathlib.Path(f).write_text(
-            'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8'))
+        'pynorare.api.urllib.request',
+        mocker.Mock(urlretrieve=lambda u, f: pathlib.Path(f).write_text(
+            'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8')))
     _main('download', 'dsid')
     _main('map', 'dsid')
     _main('validate', 'dsid')
