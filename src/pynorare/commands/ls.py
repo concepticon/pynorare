@@ -32,30 +32,18 @@ def run(args):
                     ds.year,
                     ', '.join(ds.source_language[:3]),
                     ', '.join(ds.tags),
-                    len(ds.columns) - 3,
+                    len(ds.variables),
                     len(ds.concepts)
                 ])
                 concepts.update(ds.concepts)
             else:
-                for column in ds.columns:
-                    if column not in [
-                        'concepticon_id',
-                        'concepticon_gloss',
-                        'line_in_source',
-                        'english',
-                        'german',
-                        'polish',
-                        'spanish',
-                        'chinese',
-                        'french',
-                        'dutch',
-                    ]:
-                        columns[(ds.id, column)] += [(
-                            ds.columns[column].language,
-                            ds.columns[column].norare,
-                            ds.columns[column].structure,
-                            ds.columns[column].type,
-                        )]
+                for var in ds.variables:
+                    columns[(ds.id, var.name)] += [(
+                        var.language,
+                        var.norare,
+                        var.structure,
+                        var.type,
+                    )]
         if not args.columns:
             table.append([
                 '-',

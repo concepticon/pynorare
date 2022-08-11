@@ -1,12 +1,11 @@
-import zipfile
 import collections
-from urllib.request import urlretrieve
 
+import requests
 from cldfcatalog import Config
 from csvw.dsv import reader
 from pyconcepticon import Concepticon
-
 import xlrd
+import openpyxl
 
 
 def get_mappings(concepticon=None):
@@ -24,20 +23,24 @@ def get_mappings(concepticon=None):
         for k, v in mappings[language].items():
             # We sort concepticon matches for a given gloss by descending priority and ascending
             # Concepticon ID.
-            mappings[language][k] = sorted(
-                v, key=lambda x: (x[1], -int(x[0])), reverse=True)
+            mappings[language][k] = sorted(v, key=lambda x: (x[1], -int(x[0])), reverse=True)
     return mappings, concepticon
 
 
 def get_excel(path, sheet_index, dicts=False):
-    xlfile = xlrd.open_workbook(str(path))
-    sheet = xlfile.sheet_by_index(sheet_index)
-    sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
+    if path.suffix == ".xlsx":
+        xlfile = openpyxl.load_workbook(str(path), data_only=True)
+        sheet = [[cell.value for cell in r] for r in xlfile[xlfile.sheetnames[sheet_index]].rows]
+    else:
+        sheet = xlrd.open_workbook(str(path)).sheet_by_index(sheet_index)
+        sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
     return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
 
 
-def download_archive(url, target, filename, path, cls=zipfile.ZipFile):
-    urlretrieve(url, str(target))
-    with open(str(target), 'rb') as f:
-        with cls(f) as archive:
-            archive.extract(filename, path=str(path))
+def download_file(url, path):  # pragma: no cover
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with path.open('wb') as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return path

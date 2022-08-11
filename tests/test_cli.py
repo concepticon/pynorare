@@ -18,7 +18,7 @@ def test_ls(_main, capsys):
     assert 'dsid' in out
     _main('ls', '--columns')
     out, _ = capsys.readouterr()
-    assert 'a_float' in out
+    assert 'A_FLOAT' in out
 
 
 def test_stats(_main, capsys):
@@ -29,17 +29,19 @@ def test_stats(_main, capsys):
 
 def test_workflow(_main, mocker):
     mocker.patch(
-        'pynorare.dataset.urlretrieve',
-        lambda u, f: pathlib.Path(f).write_text(
-            'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8'))
+        'pynorare.api.urllib.request',
+        mocker.Mock(urlretrieve=lambda u, f: pathlib.Path(f).write_text(
+            'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8')))
     _main('download', 'dsid')
     _main('map', 'dsid')
     _main('validate', 'dsid')
 
+    mocker.patch(
+        'pynorare.api.urllib.request',
+        mocker.Mock(urlretrieve=lambda u, t: 1))
+    _main('download', 'ds2')
+    _main('map', 'ds2')
+
 
 def test_check(_main):
     _main('check')
-
-
-def test_app(_main):
-    _main('app')

@@ -1,17 +1,21 @@
-from pyconcepticon import Concepticon
-
-from pynorare.dataset import get_dataset_cls
+import pathlib
 
 
 def add_datasets(parser):
     parser.add_argument(
         'dataset',
-        nargs='+',
+        nargs='*',
         help='select your dataset',
         type=str)
+    parser.add_argument('--start-from', default=None)
 
 
 def iter_datasets(args):
-    for dsid in args.dataset:
-        cls = get_dataset_cls(args.api.datasets[dsid].path.parent)
-        yield cls(repos=args.norarepo, concepticon=Concepticon(args.repos.repos))
+    dsids = [
+        pathlib.Path(dsid).name if pathlib.Path(dsid).exists() else dsid for dsid in args.dataset]
+    for dsid, ds in sorted(args.api.datasets.items(), key=lambda i: i[0]):
+        if args.start_from and dsid < args.start_from:
+            continue  # pragma: no cover
+        if (not dsids) or dsid in dsids:
+            ds.log = args.log
+            yield ds
