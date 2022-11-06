@@ -71,8 +71,11 @@ class Dataset(object):
     def __attrs_post_init__(self):
         colname2title = {
             c.name: str(c.titles) if c.titles else '' for c in self.table.tableSchema.columns}
-        for v in self.variables:
-            v.nameinsource = colname2title[v.name]
+        try:
+            for v in self.variables:
+                v.nameinsource = colname2title[v.name]
+        except KeyError:
+            pass
 
     @property
     def raw_dir(self):
@@ -112,7 +115,6 @@ class Dataset(object):
         mappings = list(self.table)
         if mappings:
             self.log.info('metadata file can be loaded')
-
         if 'CONCEPTICON_ID' in mappings[0] and \
                 'CONCEPTICON_GLOSS' in mappings[0] and \
                 'LINE_IN_SOURCE' in mappings[0]:
@@ -140,6 +142,8 @@ class Dataset(object):
         self.log.info('Downloaded and unzipped {0} successfully.'.format(url))
 
     def download_file(self, url, target=None, overwrite=False):
+        if not self.raw_dir.exists():
+            self.raw_dir.mkdir()
         if not target:
             target = urllib.parse.urlparse(url).path.split('/')[-1]
         if (not self.raw_dir.joinpath(target).exists()) or overwrite:
@@ -185,7 +189,6 @@ class Dataset(object):
         rename = {str(c.titles): c.name for c in self.columns if c.titles}
         # (conceptset ID, list of rows with matching glosses)
         mapped = collections.defaultdict(list)
-
         for i, row in enumerate(dicts, start=1):
             new_row = {rename.get(k, k): v for k, v in row.items()}
             new_row.setdefault('LINE_IN_SOURCE', i)
@@ -209,7 +212,7 @@ class Dataset(object):
         for key, rows in sorted(mapped.items(), key=lambda x: x[0]):
             # We choose one representative gloss in the raw data for each conceptset ID, selecting
             # by higher priority and lower line number in the raw data.
-            table.append(sorted(rows, key=lambda x: (x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
+            table.append(sorted(rows, key=lambda x: (-x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
         self.write_table(table)
 
     def write_table(self, items):
