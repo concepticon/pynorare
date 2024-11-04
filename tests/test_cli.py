@@ -43,5 +43,17 @@ def test_workflow(_main, mocker):
     _main('map', 'ds2')
 
 
+def test_errors(_main, capsys):
+    _main('download', 'non-existing-dataset')
+    _, err = capsys.readouterr()
+    assert 'non-existing-dataset' in err
+    _main('map', 'non-existing-dataset')
+    _, err = capsys.readouterr()
+    assert 'non-existing-dataset' in err
+    _main('validate', 'non-existing-dataset')
+    _, err = capsys.readouterr()
+    assert 'non-existing-dataset' in err
+
+
 def test_check(_main):
     _main('check')

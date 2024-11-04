@@ -11,6 +11,7 @@ from clldutils.loglib import Logging
 from pyconcepticon import Concepticon
 
 from pynorare import NoRaRe
+from pynorare.util import NoRaReError
 import pynorare.commands
 
 
@@ -58,6 +59,9 @@ def main(args=None, catch_all=False, parsed_args=None):
         except ParserError as e:  # pragma: no cover
             print(e)
             return main([args._command, '-h'])
+        except NoRaReError as e:
+            args.log.error(e)
+            return 1
         except Exception as e:  # pragma: no cover
             if catch_all:  # pragma: no cover
                 print(e)
