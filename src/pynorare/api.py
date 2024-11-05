@@ -19,6 +19,7 @@ from clldutils.apilib import API
 import pybtex.database
 
 from pynorare.files import get_mappings, get_excel, download_file
+from pynorare.util import read_wellformed_tsv_or_die
 
 __all__ = ['NoRaRe']
 
@@ -236,7 +237,7 @@ class NoRaRe(API):
                 pass
 
         variables = collections.defaultdict(list)
-        for row in reader(self.repos / 'norare.tsv', delimiter='\t', dicts=True):
+        for row in read_wellformed_tsv_or_die(self.repos / 'norare.tsv'):
             variables[row['DATASET']].append(
                 Variable(**{k.lower(): v for k, v in row.items()}))
 
@@ -249,7 +250,7 @@ class NoRaRe(API):
 
         all_refs = set(self.refs).union(concepticon.bibliography if concepticon else {})
 
-        for row in reader(self.repos / 'datasets.tsv', delimiter='\t', dicts=True):
+        for row in read_wellformed_tsv_or_die(self.repos / 'datasets.tsv'):
             self.datasets[row['ID']] = Dataset(
                 variables=variables[row['ID']],
                 csvwmdpath=datasetsdir / row['ID'] / '{}.tsv-metadata.json'.format(row['ID']),

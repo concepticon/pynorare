@@ -2,10 +2,11 @@ import collections
 
 import requests
 from cldfcatalog import Config
-from csvw.dsv import reader
 from pyconcepticon import Concepticon
 import xlrd
 import openpyxl
+
+from pynorare.util import read_wellformed_tsv_or_die
 
 
 def get_mappings(concepticon=None):
@@ -15,7 +16,7 @@ def get_mappings(concepticon=None):
     mappings = {}
     for language, path in paths.items():
         mappings[language] = collections.defaultdict(set)
-        for line in reader(path, delimiter='\t', dicts=True):
+        for line in read_wellformed_tsv_or_die(path):
             gloss = line['GLOSS'].split('///')[1]
             oc = concepticon.conceptsets[line['ID']].ontological_category
             mappings[language][gloss].add((line['ID'], int(line['PRIORITY']), oc))
