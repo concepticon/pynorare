@@ -18,7 +18,7 @@ from clldutils.source import Source
 from clldutils.apilib import API
 import pybtex.database
 
-from pynorare.files import get_mappings, get_excel, download_file
+from pynorare import files
 from pynorare.util import read_wellformed_tsv_or_die
 
 __all__ = ['NoRaRe']
@@ -130,7 +130,7 @@ class Dataset(object):
 
     def map(self, concepticon=None, mappings=None):
         if not mappings:
-            mappings, _ = get_mappings(concepticon)
+            mappings, _ = files.get_mappings(concepticon)
         self._run_function('map', concepticon, mappings)
 
     def download(self):
@@ -148,11 +148,7 @@ class Dataset(object):
         if not target:
             target = urllib.parse.urlparse(url).path.split('/')[-1]
         if (not self.raw_dir.joinpath(target).exists()) or overwrite:
-            try:
-                urllib.request.urlretrieve(url, str(self.raw_dir / target))
-            except urllib.error.HTTPError:  # pragma: no cover
-                # Try with requests:
-                download_file(url, self.raw_dir / target)
+            files.download_file(url, self.raw_dir / target)
             self.log.info('Downloaded {0} successfully.'.format(url))
         return self.raw_dir / target
 
@@ -161,7 +157,7 @@ class Dataset(object):
         return list(reader(self.raw_dir / path, delimiter=delimiter, dicts=dicts, encoding=coding))
 
     def get_excel(self, path, sidx=0, dicts=True):
-        sheet = get_excel(self.raw_dir.joinpath(path), sidx, dicts)
+        sheet = files.get_excel(self.raw_dir.joinpath(path), sidx, dicts)
         self.log.info('load data from {0}'.format(path))
         return sheet
 

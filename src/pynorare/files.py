@@ -39,7 +39,8 @@ def get_excel(path, sheet_index, dicts=False):
 
 
 def download_file(url, path):  # pragma: no cover
-    with requests.get(url, stream=True) as r:
+    headers = {'User-Agent': 'norare/1.1.0'}
+    with requests.get(url, headers=headers, stream=True) as r:
         r.raise_for_status()
         with path.open('wb') as f:
             for chunk in r.iter_content(chunk_size=8192):
