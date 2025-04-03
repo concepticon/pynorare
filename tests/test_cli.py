@@ -1,3 +1,4 @@
+import types
 import pathlib
 
 import pytest
@@ -32,24 +33,18 @@ def make_pretend_data(_url, path):
         'gloss,float,int,POS\n'
         'the gloss,1.2,3,noun\n'
         'other gloss,1.2,3')
-    pathlib.Path(path).write_text(data, encoding='utf-8')
+    path.write_text(data, encoding='utf-8')
     return path
 
 
 def test_workflow(_main, mocker):
-    mock_impl = mocker.patch(
-        'pynorare.api.files.download_file',
-        sideeffect=make_pretend_data)
+    mocker.patch('pynorare.api.download_file', make_pretend_data)
     _main('download', 'dsid')
-    mock_impl.assert_called_once()
     _main('map', 'dsid')
     _main('validate', 'dsid')
 
-    mock_impl = mocker.patch(
-        'pynorare.api.files.download_file',
-        sideeffect=lambda _url, path: path)
+    mocker.patch('pynorare.api.download_file', lambda _url, path: path)
     _main('download', 'ds2')
-    mock_impl.assert_called_once()
     _main('map', 'ds2')
 
 

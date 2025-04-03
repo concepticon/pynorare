@@ -16,8 +16,7 @@ def test_NoRaRe(api):
 
 def test_Dataset_download_zip(api, mocker):
     mocker.patch(
-        'pynorare.api.files.download_file',
-        sideeffect=lambda _url, path: path)
+        'pynorare.api.download_file', lambda _url, path: path)
     ds = api.datasets['ds2']
     ds.download_zip('x', 'f.zip', 'norare.xlsx')
     assert len(ds.get_excel('norare.xlsx')) == 2
