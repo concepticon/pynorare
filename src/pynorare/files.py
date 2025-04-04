@@ -6,6 +6,7 @@ from pyconcepticon import Concepticon
 import xlrd
 import openpyxl
 
+import pynorare
 from pynorare.util import read_wellformed_tsv_or_die
 
 
@@ -39,7 +40,8 @@ def get_excel(path, sheet_index, dicts=False):
 
 
 def download_file(url, path):  # pragma: no cover
-    request = Request(url, headers={'User-Agent': 'norare/1.1.0'})
+    user_agent = f'norare/{pynorare.__version__}'
+    request = Request(url, headers={'User-Agent': user_agent})
     with urlopen(request) as response:
         with open(path, 'wb') as fp:
             while (chunk := response.read(8192)):
