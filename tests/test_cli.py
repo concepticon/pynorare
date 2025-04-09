@@ -27,18 +27,27 @@ def test_stats(_main, capsys):
     assert out.strip().startswith('No.')
 
 
+def make_pretend_data(_url, path):
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(
+            'gloss,float,int,POS\n'
+            'the gloss,1.2,3,noun\n'
+            'other gloss,1.2,3')
+    return path
+
+
 def test_workflow(_main, mocker):
-    mocker.patch(
-        'pynorare.api.urllib.request',
-        mocker.Mock(urlretrieve=lambda u, f: pathlib.Path(f).write_text(
-            'gloss,float,int,POS\nthe gloss,1.2,3,noun\nother gloss,1.2,3', encoding='utf8')))
+    mock_download = mocker.patch(
+        'pynorare.api.files.download_file',
+        side_effect=make_pretend_data)
     _main('download', 'dsid')
+    mock_download.assert_called_once()
     _main('map', 'dsid')
     _main('validate', 'dsid')
 
     mocker.patch(
-        'pynorare.api.urllib.request',
-        mocker.Mock(urlretrieve=lambda u, t: 1))
+        'pynorare.api.files.download_file',
+        side_effect=lambda _url, path: path)
     _main('download', 'ds2')
     _main('map', 'ds2')
 
