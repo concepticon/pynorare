@@ -1,5 +1,3 @@
-import pathlib
-
 import pytest
 
 from pynorare.__main__ import main
@@ -8,7 +6,7 @@ from pynorare.__main__ import main
 @pytest.fixture
 def _main(repos, concepticon_api):
     def f(*args):
-        main(['--repos', str(concepticon_api.repos), '--norarepo', str(repos)] + list(args))
+        main(['--repos', str(concepticon_api.repos), '--norarepo', str(repos), *args])
     return f
 
 
@@ -22,32 +20,30 @@ def test_ls(_main, capsys):
 
 
 def test_stats(_main, capsys):
-    _main('stats', '--format=plain')
+    _main('stats', '--format=simple')
     out, _ = capsys.readouterr()
     assert out.strip().startswith('No.')
 
 
 def make_pretend_data(_url, path):
-    with open(path, 'w', encoding='utf-8') as f:
-        f.write(
-            'gloss,float,int,POS\n'
-            'the gloss,1.2,3,noun\n'
-            'other gloss,1.2,3')
+    data = (
+        'gloss,float,int,POS\n'
+        'the gloss,1.2,3,noun\n'
+        'other gloss,1.2,3')
+    path.write_text(data, encoding='utf-8')
     return path
 
 
 def test_workflow(_main, mocker):
     mock_download = mocker.patch(
-        'pynorare.api.files.download_file',
+        'pynorare.api.download_file',
         side_effect=make_pretend_data)
     _main('download', 'dsid')
     mock_download.assert_called_once()
     _main('map', 'dsid')
     _main('validate', 'dsid')
 
-    mocker.patch(
-        'pynorare.api.files.download_file',
-        side_effect=lambda _url, path: path)
+    mocker.patch('pynorare.api.download_file', lambda _url, path: path)
     _main('download', 'ds2')
     _main('map', 'ds2')
 

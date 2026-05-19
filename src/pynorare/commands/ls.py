@@ -13,7 +13,7 @@ def register(parser):
     parser.add_argument(
         '--columns',
         help='list information on columns',
-        action='store_true'
+        action='store_true',
     )
 
 
@@ -24,7 +24,7 @@ def run(args):
     headers = ['No', 'Dataset', 'Field', 'Ln', 'Norare', 'Structure', 'Type'] \
         if args.columns else ['ID', 'Author', 'Year', 'Languages', 'Tags', 'Ratings', 'Concepts']
     with Table(args, *headers) as table:
-        for i, ds in progressbar(enumerate(args.api.datasets.values())):
+        for ds in progressbar(args.api.datasets.values()):
             if not args.columns:
                 table.append([
                     ds.id,
@@ -33,17 +33,17 @@ def run(args):
                     ', '.join(ds.source_language[:3]),
                     ', '.join(ds.tags),
                     len(ds.variables),
-                    len(ds.concepts)
+                    len(ds.concepts),
                 ])
                 concepts.update(ds.concepts)
             else:
                 for var in ds.variables:
-                    columns[(ds.id, var.name)] += [(
+                    columns[ds.id, var.name].append((
                         var.language,
                         var.norare,
                         var.structure,
                         var.type,
-                    )]
+                    ))
         if not args.columns:
             table.append([
                 '-',
@@ -59,8 +59,8 @@ def run(args):
                     i + 1,
                     k[0],
                     k[1],
-                    ', '.join(list(set([x[0] for x in v])))[:30],
-                    ', '.join(list(set([x[1] for x in v])))[:15],
-                    ', '.join(list(set([x[2] for x in v])))[:15],
-                    ', '.join(list(set([x[3] for x in v])))[:15],
+                    ', '.join(list({x[0] for x in v}))[:30],
+                    ', '.join(list({x[1] for x in v}))[:15],
+                    ', '.join(list({x[2] for x in v}))[:15],
+                    ', '.join(list({x[3] for x in v}))[:15],
                 ))

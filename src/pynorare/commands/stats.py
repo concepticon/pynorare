@@ -11,18 +11,17 @@ def register(parser):
     parser.add_argument(
         '--columns',
         help='list information on columns',
-        action='store_true'
+        action='store_true',
     )
 
 
 def run(args):
-
     concepts = defaultdict(list)
-    for i, ds in enumerate(args.api.datasets.values()):
-        args.log.info('analyze ' + ds.id)
+    for ds in args.api.datasets.values():
+        args.log.info('analyze %s', ds.id)
         for cid, concept in ds.concepts.items():
             if concept['concepticon_gloss']:
-                concepts[cid, concept['concepticon_gloss']] += [ds.id]
+                concepts[cid, concept['concepticon_gloss']].append(ds.id)
     headers = ['No.', 'ID', 'Gloss', 'Datasets']
     with Table(args, *headers) as table:
         for i, ((cid, cgl), clists) in enumerate(

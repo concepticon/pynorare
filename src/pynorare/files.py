@@ -1,3 +1,4 @@
+from typing import Any, Optional
 import collections
 from urllib.request import Request, urlopen
 
@@ -9,8 +10,14 @@ import openpyxl
 import pynorare
 from pynorare.util import read_wellformed_tsv_or_die
 
+LanguageType = str
+GlossType = str
+IdType = str
+PrioType = int
+MappingsType = dict[LanguageType, dict[GlossType, list[tuple[IdType, PrioType, str]]]]
 
-def get_mappings(concepticon=None):
+
+def get_mappings(concepticon: Optional[Concepticon] = None) -> tuple[MappingsType, Concepticon]:
     concepticon = concepticon or Concepticon(Config.from_file().get_clone('concepticon'))
     paths = {p.stem.split('-')[1]: p
              for p in concepticon.repos.joinpath('mappings').glob('map-*.tsv')}
@@ -21,7 +28,7 @@ def get_mappings(concepticon=None):
             gloss = line['GLOSS'].split('///')[1]
             oc = concepticon.conceptsets[line['ID']].ontological_category
             mappings[language][gloss].add((line['ID'], int(line['PRIORITY']), oc))
-    for language, path in paths.items():
+    for language in paths:
         for k, v in mappings[language].items():
             # We sort concepticon matches for a given gloss by descending priority and ascending
             # Concepticon ID.
@@ -29,13 +36,13 @@ def get_mappings(concepticon=None):
     return mappings, concepticon
 
 
-def get_excel(path, sheet_index, dicts=False):
+def get_excel(path, sheet_index, dicts=False) -> list[dict[str, Any]]:
     if path.suffix == ".xlsx":
         xlfile = openpyxl.load_workbook(str(path), data_only=True)
         sheet = [[cell.value for cell in r] for r in xlfile[xlfile.sheetnames[sheet_index]].rows]
     else:
         sheet = xlrd.open_workbook(str(path)).sheet_by_index(sheet_index)
-        sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
+        sheet = [sheet.row_values(i) for i in range(sheet.nrows)]
     return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
 
 

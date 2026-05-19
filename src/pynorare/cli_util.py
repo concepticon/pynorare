@@ -30,8 +30,7 @@ def iter_datasets(args):
         for dsid in desired_datasets
         if dsid not in args.api.datasets]
     if unknown_datasets:
-        raise NoRaReError(
-            'Unknown dataset(s): {}'.format(', '.join(unknown_datasets)))
+        raise NoRaReError(f'Unknown dataset(s): {", ".join(unknown_datasets)}')
 
     for dsid in desired_datasets:
         ds = args.api.datasets[dsid]
