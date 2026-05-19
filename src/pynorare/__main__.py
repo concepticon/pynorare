@@ -51,7 +51,7 @@ def main(args=None, catch_all=False, parsed_args=None):
             stack.enter_context(Catalog(args.repos, tag=args.repos_version))
         args.repos = Concepticon(args.repos)
         args.api = NoRaRe(args.norarepo, concepticon=args.repos)
-        args.log.info('norare at {0}'.format(args.norarepo))
+        args.log.info(f'norare at {args.norarepo}')
         try:
             return args.main(args) or 0
         except KeyboardInterrupt:  # pragma: no cover
@@ -60,7 +60,7 @@ def main(args=None, catch_all=False, parsed_args=None):
             print(e)
             return main([args._command, '-h'])
         except NoRaReError as e:
-            args.log.error(e)
+            args.log.error(str(e))
             return 1
         except Exception as e:  # pragma: no cover
             if catch_all:  # pragma: no cover

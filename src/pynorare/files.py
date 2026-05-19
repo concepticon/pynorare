@@ -28,7 +28,7 @@ def get_mappings(concepticon: Optional[Concepticon] = None) -> tuple[MappingsTyp
             gloss = line['GLOSS'].split('///')[1]
             oc = concepticon.conceptsets[line['ID']].ontological_category
             mappings[language][gloss].add((line['ID'], int(line['PRIORITY']), oc))
-    for language, path in paths.items():
+    for language in paths:
         for k, v in mappings[language].items():
             # We sort concepticon matches for a given gloss by descending priority and ascending
             # Concepticon ID.
@@ -42,7 +42,7 @@ def get_excel(path, sheet_index, dicts=False) -> list[dict[str, Any]]:
         sheet = [[cell.value for cell in r] for r in xlfile[xlfile.sheetnames[sheet_index]].rows]
     else:
         sheet = xlrd.open_workbook(str(path)).sheet_by_index(sheet_index)
-        sheet = [sheet.row_values(i) for i in range(0, sheet.nrows)]
+        sheet = [sheet.row_values(i) for i in range(sheet.nrows)]
     return [dict(zip(sheet[0], row)) for row in sheet[1:]] if dicts else sheet
 
 

@@ -101,6 +101,8 @@ class Dataset:
                 importlib.util.spec_from_loader(loader.name, loader))
             loader.exec_module(mod)
             return mod
+        else:
+            return None
 
     @property
     def table(self) -> Table:
@@ -215,7 +217,7 @@ class Dataset:
                     mapped[match].append(new_row)
 
         table = []
-        for key, rows in sorted(mapped.items(), key=lambda x: x[0]):
+        for _, rows in sorted(mapped.items(), key=lambda x: x[0]):
             # We choose one representative gloss in the raw data for each conceptset ID, selecting
             # by higher priority and lower line number in the raw data.
             table.append(sorted(rows, key=lambda x: (-x['_PRIORITY'], x['LINE_IN_SOURCE']))[0])
@@ -234,7 +236,6 @@ class NoRaRe(API):
         self.datasets = collections.OrderedDict()
         datasetsdir = self.repos / 'datasets'
 
-        concepticon = concepticon
         if not concepticon:  # pragma: no cover
             try:
                 concepticon = Concepticon(Config.from_file().get_clone('concepticon'))
@@ -265,7 +266,7 @@ class NoRaRe(API):
 
         # remaining datasets come from concepticon, we identify them from datasets
         for dataset in [d for d in variables if d not in self.datasets]:
-            csvwmdpath = datasetsdir / dataset / '{}.tsv-metadata.json'.format(dataset)
+            csvwmdpath = datasetsdir / dataset / f'{dataset}.tsv-metadata.json'
             ds = concepticon.conceptlists[dataset]
             self.datasets[ds.id] = Dataset(
                 id=ds.id,
@@ -290,4 +291,4 @@ class NoRaRe(API):
                 refs = [dataset.refs] if isinstance(dataset.refs, str) else dataset.refs
                 for ref in refs:
                     if ref not in all_refs:  # pragma: no cover
-                        raise ValueError('missing references.bib: {}'.format(ref))
+                        raise ValueError(f'missing references.bib: {ref}')

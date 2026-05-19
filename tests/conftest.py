@@ -19,10 +19,10 @@ def concepticon_api(tmp_path):
     shutil.copytree(str(TEST_REPOS), str(concepticon_repos))
     md = jsonlib.load(TEST_REPOS / 'concepticondata' / 'conceptlists' / 'default-metadata.json')
     md['tables'][0]['url'] = 'Perrin-2010-110.tsv'
-    md['tables'][0]['tableSchema']['columns'].extend([dict(name='FRENCH'), dict(name='GERMAN')])
+    md['tables'][0]['tableSchema']['columns'].extend([{'name': 'FRENCH'}, {'name': 'GERMAN'}])
     jsonlib.dump(
         md,
-        concepticon_repos / 'concepticondata' / 'conceptlists' / 'Perrin-2010-110.tsv-metadata.json'
+        concepticon_repos / 'concepticondata' / 'conceptlists' / 'Perrin-2010-110.tsv-metadata.json',
     )
     mappings = concepticon_repos / 'mappings'
     mappings.joinpath('map-fr.tsv').write_text("""\

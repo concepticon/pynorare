@@ -1,6 +1,3 @@
-import types
-import pathlib
-
 import pytest
 
 from pynorare.__main__ import main
@@ -9,7 +6,7 @@ from pynorare.__main__ import main
 @pytest.fixture
 def _main(repos, concepticon_api):
     def f(*args):
-        main(['--repos', str(concepticon_api.repos), '--norarepo', str(repos)] + list(args))
+        main(['--repos', str(concepticon_api.repos), '--norarepo', str(repos), *args])
     return f
 
 
