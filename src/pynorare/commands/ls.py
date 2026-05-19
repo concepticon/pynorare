@@ -38,12 +38,12 @@ def run(args):
                 concepts.update(ds.concepts)
             else:
                 for var in ds.variables:
-                    columns[(ds.id, var.name)] += [(
+                    columns[ds.id, var.name].append((
                         var.language,
                         var.norare,
                         var.structure,
                         var.type,
-                    )]
+                    ))
         if not args.columns:
             table.append([
                 '-',

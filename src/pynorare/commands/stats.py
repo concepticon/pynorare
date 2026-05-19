@@ -16,13 +16,12 @@ def register(parser):
 
 
 def run(args):
-
     concepts = defaultdict(list)
     for ds in args.api.datasets.values():
-        args.log.info(f'analyze {ds.id}')
+        args.log.info('analyze %s', ds.id)
         for cid, concept in ds.concepts.items():
             if concept['concepticon_gloss']:
-                concepts[cid, concept['concepticon_gloss']] += [ds.id]
+                concepts[cid, concept['concepticon_gloss']].append(ds.id)
     headers = ['No.', 'ID', 'Gloss', 'Datasets']
     with Table(args, *headers) as table:
         for i, ((cid, cgl), clists) in enumerate(
