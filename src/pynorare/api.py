@@ -18,7 +18,7 @@ from cldfcatalog import Config
 from pyconcepticon import Concepticon
 from clldutils.source import Source
 from clldutils.apilib import API
-import pybtex.database
+import simplepybtex.database
 
 from pynorare.files import get_mappings, get_excel, download_file, MappingsType
 from pynorare.util import read_wellformed_tsv_or_die
@@ -248,7 +248,7 @@ class NoRaRe(API):
 
         # get bibliography
         self.refs = collections.OrderedDict()
-        for key, entry in pybtex.database.parse_string(
+        for key, entry in simplepybtex.database.parse_string(
                 self.repos.joinpath('references', 'references.bib').read_text(encoding='utf8'),
                 bib_format='bibtex').entries.items():
             self.refs[key] = Source.from_entry(key, entry)
