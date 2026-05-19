@@ -38,8 +38,11 @@ def make_pretend_data(_url, path):
 
 
 def test_workflow(_main, mocker):
-    mocker.patch('pynorare.api.download_file', make_pretend_data)
+    mock_download = mocker.patch(
+        'pynorare.api.download_file',
+        side_effect=make_pretend_data)
     _main('download', 'dsid')
+    mock_download.assert_called_once()
     _main('map', 'dsid')
     _main('validate', 'dsid')
 

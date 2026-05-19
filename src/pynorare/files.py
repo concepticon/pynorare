@@ -1,12 +1,13 @@
 from typing import Any, Optional
 import collections
+from urllib.request import Request, urlopen
 
-import requests
 from cldfcatalog import Config
 from pyconcepticon import Concepticon
 import xlrd
 import openpyxl
 
+import pynorare
 from pynorare.util import read_wellformed_tsv_or_die
 
 LanguageType = str
@@ -46,10 +47,10 @@ def get_excel(path, sheet_index, dicts=False) -> list[dict[str, Any]]:
 
 
 def download_file(url, path):  # pragma: no cover
-    headers = {'User-Agent': 'norare/1.1.0'}
-    with requests.get(url, headers=headers, stream=True) as r:
-        r.raise_for_status()
-        with path.open('wb') as f:
-            for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
+    user_agent = f'norare/{pynorare.__version__}'
+    request = Request(url, headers={'User-Agent': user_agent})
+    with urlopen(request) as response:
+        with open(path, 'wb') as fp:
+            while (chunk := response.read(8192)):
+                fp.write(chunk)
     return path
