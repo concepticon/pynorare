@@ -55,6 +55,7 @@ class Dataset:
     refs: str = dataclasses.field(repr=False)
     note: str = dataclasses.field(repr=False)
     alias: str = dataclasses.field(repr=False)
+    concepticon: str = dataclasses.field(repr=False)
     csvwmdpath: pathlib.Path = dataclasses.field(repr=False)
     variables: list[Variable] = dataclasses.field(repr=False)
     from_concepticon: bool
@@ -279,6 +280,7 @@ class NoRaRe(API):
                 refs=ds.refs,
                 note=ds.note,
                 alias=ds.alias,
+                concepticon=ds.id,
                 variables=variables[dataset],
                 csvwmdpath=csvwmdpath if csvwmdpath.exists() else concepticon.repos.joinpath(
                     'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json'),
