@@ -55,6 +55,7 @@ class Dataset:
     refs: str = dataclasses.field(repr=False)
     note: str = dataclasses.field(repr=False)
     alias: str = dataclasses.field(repr=False)
+    concepticon: str = dataclasses.field(repr=False)
     csvwmdpath: pathlib.Path = dataclasses.field(repr=False)
     variables: list[Variable] = dataclasses.field(repr=False)
     from_concepticon: bool
@@ -257,6 +258,9 @@ class NoRaRe(API):
         all_refs = set(self.refs).union(concepticon.bibliography if concepticon else {})
 
         for row in read_wellformed_tsv_or_die(self.repos / 'datasets.tsv'):
+            # pragma: no cover
+            if not "Concepticon" in row:
+                row["Concepticon"] = None
             self.datasets[row['ID']] = Dataset(
                 variables=variables[row['ID']],
                 csvwmdpath=datasetsdir / row['ID'] / '{}.tsv-metadata.json'.format(row['ID']),
@@ -279,6 +283,7 @@ class NoRaRe(API):
                 refs=ds.refs,
                 note=ds.note,
                 alias=ds.alias,
+                concepticon=ds.id,
                 variables=variables[dataset],
                 csvwmdpath=csvwmdpath if csvwmdpath.exists() else concepticon.repos.joinpath(
                     'concepticondata', 'conceptlists', ds.id + '.tsv-metadata.json'),
