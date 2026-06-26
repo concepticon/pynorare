@@ -258,6 +258,9 @@ class NoRaRe(API):
         all_refs = set(self.refs).union(concepticon.bibliography if concepticon else {})
 
         for row in read_wellformed_tsv_or_die(self.repos / 'datasets.tsv'):
+            # pragma: no cover
+            if not "Concepticon" in row:
+                row["Concepticon"] = None
             self.datasets[row['ID']] = Dataset(
                 variables=variables[row['ID']],
                 csvwmdpath=datasetsdir / row['ID'] / '{}.tsv-metadata.json'.format(row['ID']),
