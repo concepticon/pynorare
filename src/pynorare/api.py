@@ -205,9 +205,11 @@ class Dataset:
             if gmappings:
                 match, priority = None, None
                 if pos:
-                    for match, priority, pos_ in reversed(gmappings):
+                    for match, priority, pos_ in gmappings:
                         if pos_ == pos_mapper.get(new_row[pos_name], new_row[pos_name]) and match:
-                            break  # pragma: no cover
+                            break
+                    else:
+                        continue
                 else:
                     match, priority, pos_ = gmappings[0]
 

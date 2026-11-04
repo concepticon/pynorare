@@ -25,3 +25,21 @@ def test_Dataset_download_zip(api, mocker):
 def test_Dataset_get_excel(api):
     res = api.datasets['ds2'].get_excel('test.xls', 0)
     assert len(res) == 5857
+
+
+@pytest.mark.parametrize('pos,mapper,candidates,expected', [
+    ('noun', {'noun': 'Person/Thing'}, [('1', 2, 'Property')], None),
+    ('noun', {'noun': 'Person/Thing'}, [('2', 2, 'Person/Thing')], '2'),
+    ('Person/Thing', {}, [('2', 2, 'Person/Thing')], '2'),
+    ('noun', {'noun': 'Person/Thing'}, [('2', 3, 'Person/Thing'), ('4', 2, 'Person/Thing')], '2'),
+    ('noun', {'noun': 'Person/Thing'}, [('1', 3, 'Property'), ('2', 2, 'Person/Thing')], '2'),
+])
+def test_Dataset_extract_data_pos(api, concepticon_api, mocker, pos, mapper, candidates, expected):
+    ds = api.datasets['dsid']
+    write = mocker.patch.object(ds, 'write_table')
+    ds.extract_data(
+        [{'FRENCH': 'the gloss', 'POS': pos}], concepticon_api,
+        {'fr': {'the gloss': candidates}}, gloss='FRENCH', language='fr',
+        pos=True, pos_mapper=mapper)
+    written = write.call_args[0][0]
+    assert [row['CONCEPTICON_ID'] for row in written] == ([expected] if expected else [])

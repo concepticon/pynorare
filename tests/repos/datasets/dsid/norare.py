@@ -13,6 +13,6 @@ def map(dataset, concepticon, mappings):
         concepticon,
         mappings,
         pos=True,
-        pos_mapper={'noun': 'THING'},
+        pos_mapper={'noun': 'Person/Thing'},
         gloss='FRENCH',
         language='fr')
