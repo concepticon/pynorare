@@ -125,7 +125,7 @@ class Dataset:
         mappings = list(self.table)
         if mappings:
             self.log.info('metadata file can be loaded')
-        if 'CONCEPTICON_ID' in mappings[0] and \
+        if mappings and 'CONCEPTICON_ID' in mappings[0] and \
                 'CONCEPTICON_GLOSS' in mappings[0] and \
                 'LINE_IN_SOURCE' in mappings[0]:
             self.log.info('concepticon data present in data')
