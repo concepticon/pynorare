@@ -16,15 +16,13 @@ def read_wellformed_tsv_or_die(file_name):
         table = list(rdr)
 
     if not table:
-        raise NoRaReError(f'{file_name}: file empty')
+        raise NoRaReError(f'{file_name}: file empty')  # pragma: no cover
     empty_rows = [
         row_no
         for row_no, row in enumerate(islice(table, 1, None), 2)
         if not row or all(not cell for cell in row)]
-    if empty_rows:
-        raise NoRaReError('\n'.join(
-            f'{file_name}: {row_no}: empty row'
-            for row_no in empty_rows))
+    if empty_rows:  # pragma: no cover
+        raise NoRaReError('\n'.join(f'{file_name}: {row_no}: empty row' for row_no in empty_rows))
 
     header = table[0]
 
@@ -32,10 +30,9 @@ def read_wellformed_tsv_or_die(file_name):
         (row_no, len(row))
         for row_no, row in enumerate(islice(table, 1, None), 2)
         if any(islice(row, len(header), None))]
-    if trailing_cells:
+    if trailing_cells:  # pragma: no cover
         raise NoRaReError('\n'.join(
-            f'{file_name}: {row_no}: trailing cells'
-            for row_no, row_width in trailing_cells))
+            f'{file_name}: {row_no}: trailing cells' for row_no, row_width in trailing_cells))
 
     return [
         {h: c for h, c in zip_longest(header, row, fillvalue='') if h}

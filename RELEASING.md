@@ -6,13 +6,13 @@
   tox -r
   ```
 
-- Make sure flake8 is happy:
+- Make sure ruff is happy:
   ```shell
-  flake8 src
+  ruff check src
   ```
 
 - Update the version number, by removing the trailing `.dev0` in:
-  - `setup.cfg`
+  - `pyproject.toml`
   - `src/pynorare/__init__.py`
 
 - Create the release commit:
@@ -27,7 +27,6 @@
 
 - Release to PyPI:
   ```shell
-  python setup.py clean --all
   rm dist/*
   python -m build -n
   twine upload dist/*
@@ -41,7 +40,7 @@
 
 - Increment version number and append `.dev0` to the version number for the new development cycle:
   - `src/pynorare/__init__.py`
-  - `setup.cfg`
+  - `pyproject.toml`
 
 - Commit/push the version change:
   ```shell

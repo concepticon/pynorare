@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 import collections
 
 import requests
@@ -16,7 +16,7 @@ PrioType = int
 MappingsType = dict[LanguageType, dict[GlossType, list[tuple[IdType, PrioType, str]]]]
 
 
-def get_mappings(concepticon: Optional[Concepticon] = None) -> tuple[MappingsType, Concepticon]:
+def get_mappings(concepticon: Concepticon | None = None) -> tuple[MappingsType, Concepticon]:
     concepticon = concepticon or Concepticon(Config.from_file().get_clone('concepticon'))
     paths = {p.stem.split('-')[1]: p
              for p in concepticon.repos.joinpath('mappings').glob('map-*.tsv')}

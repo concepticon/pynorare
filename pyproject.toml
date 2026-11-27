@@ -1,3 +1,102 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=80.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pynorare"
+version = "1.1.1.dev0"
+description = "Programmatic curation of NoRaRe data."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Johann-Mattis List", email = "mattis.list@lingpy.org"},
+    {name = "Robert Forkel", email = "dlce.rdm@eva.mpg.de"}
+]
+keywords = ["data", "linguistics"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
+]
+dependencies = [
+    "csvw>=4",
+    "pyconcepticon",
+    "clldutils>=4",
+    "cldfcatalog",
+    "simplepybtex",
+    "xlrd~=2.0",
+    "openpyxl",
+    "tqdm",
+    "requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/concepticon/pynorare"
+
+[project.scripts]
+norare = "pynorare.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "wheel",
+    "build",
+    "twine",
+]
+test = [
+    "pytest>=5",
+    "pytest-mock",
+    "pytest-cov",
+    "tox",
+]
+
+[tool.setuptools]
+zip-safe = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+exclude = [".tox"]
+
+[tool.ruff.lint]
+select = ["UP", "N", "C90", "PL", "E", "F"]
+ignore = [
+    "PLW2901",
+]
+
+[tool.pytest.ini_options]
+minversion = "9.0"
+testpaths = ["tests"]
+addopts = [
+    "--cov",
+]
+
+[tool.coverage.run]
+source = [
+    "pynorare",
+    "tests",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = ["py311", "py312", "py313", "py314", "py315"]
+skip_missing_interpreters = true
+
+[tool.tox.env_run_base]
+extras = ["test"]
+commands = [["pytest", { replace = "posargs", default = [], extend = true }]]

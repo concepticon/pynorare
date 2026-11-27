@@ -20,10 +20,7 @@ def iter_datasets(args):
     else:
         desired_datasets = args.api.datasets
     if args.start_from:
-        desired_datasets = [
-            dsid
-            for dsid in desired_datasets
-            if dsid >= args.start_from]
+        desired_datasets = [dsid for dsid in desired_datasets if dsid >= args.start_from]
 
     unknown_datasets = [
         dsid

@@ -10,7 +10,7 @@ import urllib.parse
 import urllib.request
 import importlib.util
 import importlib.machinery
-from typing import Literal, Optional, Union, Any
+from typing import Literal, Any
 
 from csvw.metadata import TableGroup, Table, Column
 from csvw.dsv import reader
@@ -38,9 +38,9 @@ class Variable:
     rating: str
     note: str
     language: str
-    source: Optional[str]
-    other: Optional[str]
-    nameinsource: Union[str, bool] = False
+    source: str | None
+    other: str | None
+    nameinsource: str | bool = False
 
 
 @dataclasses.dataclass
@@ -92,7 +92,7 @@ class Dataset:
         return d
 
     @property
-    def module(self) -> Optional[types.ModuleType]:
+    def module(self) -> types.ModuleType | None:
         modp = self.norare_dsdir / 'norare.py'
         if modp.exists():
             loader = importlib.machinery.SourceFileLoader(
@@ -134,7 +134,7 @@ class Dataset:
         else:  # pragma: no cover
             self.log.warning('%s: Function "%s" is not defined', self.id, name)
 
-    def map(self, concepticon=None, mappings: Optional[MappingsType] = None):
+    def map(self, concepticon=None, mappings: MappingsType | None = None):
         if not mappings:
             mappings, _ = get_mappings(concepticon)
         self._run_function('map', concepticon, mappings)
@@ -167,15 +167,15 @@ class Dataset:
         self.log.info('load data from %s', path)
         return sheet
 
-    def extract_data(
+    def extract_data(  # noqa: PLR0913,PLR0917,C901
             self,
-            dicts: Union[str, list[dict[str, Any]]],
+            dicts: str | list[dict[str, Any]],
             concepticon: Concepticon,
             mappings: MappingsType,
             gloss: str = 'ENGLISH',
             language: str = 'en',
             pos: bool = False,
-            pos_mapper: Optional[dict[str, str]] = None,
+            pos_mapper: dict[str, str] | None = None,
             pos_name: str = 'POS',
     ):
         """Extract data and write it to a file."""
@@ -229,12 +229,11 @@ class NoRaRe(API):
     """
     Basic class for handling the norms-rates-relations data.
     """
-    def __init__(self, repos=None, concepticon=None):
+    def __init__(self, repos=None, concepticon=None):  # noqa: C901
         API.__init__(self, repos)
         self.datasets = collections.OrderedDict()
         datasetsdir = self.repos / 'datasets'
 
-        concepticon = concepticon
         if not concepticon:  # pragma: no cover
             try:
                 concepticon = Concepticon(Config.from_file().get_clone('concepticon'))
@@ -243,8 +242,7 @@ class NoRaRe(API):
 
         variables = collections.defaultdict(list)
         for row in read_wellformed_tsv_or_die(self.repos / 'norare.tsv'):
-            variables[row['DATASET']].append(
-                Variable(**{k.lower(): v for k, v in row.items()}))
+            variables[row['DATASET']].append(Variable(**{k.lower(): v for k, v in row.items()}))
 
         # get bibliography
         self.refs = collections.OrderedDict()
@@ -258,14 +256,14 @@ class NoRaRe(API):
         for row in read_wellformed_tsv_or_die(self.repos / 'datasets.tsv'):
             self.datasets[row['ID']] = Dataset(
                 variables=variables[row['ID']],
-                csvwmdpath=datasetsdir / row['ID'] / '{}.tsv-metadata.json'.format(row['ID']),
+                csvwmdpath=datasetsdir / row['ID'] / f'{row["ID"]}.tsv-metadata.json',
                 from_concepticon=False,
                 norare_dsdir=datasetsdir / row['ID'],
                 **{k.lower(): v for k, v in row.items()})
 
         # remaining datasets come from concepticon, we identify them from datasets
         for dataset in [d for d in variables if d not in self.datasets]:
-            csvwmdpath = datasetsdir / dataset / '{}.tsv-metadata.json'.format(dataset)
+            csvwmdpath = datasetsdir / dataset / f'{dataset}.tsv-metadata.json'
             ds = concepticon.conceptlists[dataset]
             self.datasets[ds.id] = Dataset(
                 id=ds.id,
@@ -290,4 +288,4 @@ class NoRaRe(API):
                 refs = [dataset.refs] if isinstance(dataset.refs, str) else dataset.refs
                 for ref in refs:
                     if ref not in all_refs:  # pragma: no cover
-                        raise ValueError('missing references.bib: {}'.format(ref))
+                        raise ValueError(f'missing references.bib: {ref}')
